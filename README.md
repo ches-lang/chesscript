@@ -2,7 +2,7 @@
 
 Ches → JavaScript のトランスパイラです。コンパイル先の JavaScript バージョンを指定することも可能です。
 
-## サンプル
+## サンプルコード
 
 > Ches (Prototype)
 
@@ -21,4 +21,5 @@ export function main() {
 ```
 
 ※ 初期の Ches ランタイム環境はプロトタイプverとして開発されます。
+
 ※ 仕様が不安定なので仕様変更の可能性があります。
