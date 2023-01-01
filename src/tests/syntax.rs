@@ -11,19 +11,16 @@ speculate!{
 
         let expect_success = |input: &str, rule_id: &str, expected: SyntaxTree|
             assert_ast(input, rule_id, Ok(expected));
-
-        let expect_failure = |input: &str, rule_id: &str, expected: ParserError|
-            assert_ast(input, rule_id, Err(expected));
     }
 
     it "parse public visibility" {
-        expect_success("pub", "Misc::visibility", tree!{
+        expect_success("pub", "Item::visibility", tree!{
             SyntaxElementGenerator::visibility("pub")
         });
     }
 
     it "parse private visibility" {
-        expect_success("", "Misc::visibility", tree!{
+        expect_success("", "Item::visibility", tree!{
             SyntaxElementGenerator::visibility("private")
         });
     }

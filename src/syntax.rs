@@ -10,9 +10,26 @@ pub struct Main {
 impl Module for Main {
     fn new() -> Self {
         add_rules!{
-            main := !Misc::whitespace_or_newline().zero_or_more() +
-                Item::item().optional() + g!{!Misc::newline().one_or_more() + Item::item()}.zero_or_more() +
-                !Misc::whitespace_or_newline().zero_or_more();
+            main := !Symbol::whitespace_or_newline().zero_or_more() +
+                Item::item().optional() + g!{!Symbol::newline().one_or_more() + Item::item()}.zero_or_more() +
+                !Symbol::whitespace_or_newline().zero_or_more();
+        }
+    }
+}
+
+#[derive(RuleContainer)]
+pub struct Symbol {
+    whitespace: Element,
+    newline: Element,
+    whitespace_or_newline: Element,
+}
+
+impl Module for Symbol {
+    fn new() -> Self {
+        add_rules!{
+            whitespace := str(" ") | str("\t");
+            newline := Symbol::whitespace().zero_or_more() + str("\n") + Symbol::whitespace().zero_or_more();
+            whitespace_or_newline := Symbol::newline() | Symbol::whitespace();
         }
     }
 }
@@ -21,47 +38,26 @@ impl Module for Main {
 pub struct Item {
     item: Element,
     module: Element,
+    visibility: Element,
 }
 
 impl Module for Item {
     fn new() -> Self {
-        let whitespace = |min: usize| !Misc::whitespace().min(min);
-        let newlines = || !Misc::newline().one_or_more();
+        let whitespace = |min: usize| !Symbol::whitespace().min(min);
+        let newlines = || !Symbol::newline().one_or_more();
 
-        add_rules!{
-            item := Item::module();
-            module := g!{Misc::visibility() + whitespace(0)}.optional() + !str("mod") + whitespace(1) + Identifier::identifier() + newlines() +
-                g!{g!{Item::item() + newlines()}.zero_or_more()}.name("items") +
-                !str("end");
-        }
-    }
-}
-
-#[derive(RuleContainer)]
-pub struct Misc {
-    visibility: Element,
-    whitespace: Element,
-    newline: Element,
-    whitespace_or_newline: Element,
-}
-
-impl Module for Misc {
-    fn new() -> Self {
         let run_visibility: ElementCallback = |option | if let Some(children) = option {
             Some(children)
         } else {
-            Some(
-                vec![
-                    leaf!("private".to_string()),
-                ],
-            )
+            Some(vec![leaf!("private".to_string())])
         };
 
         add_rules!{
+            item := Item::module();
+            module := g!{Item::visibility() + whitespace(0)}.optional() + !str("mod") + whitespace(1) + Identifier::identifier() + newlines() +
+                g!{g!{Item::item() + newlines()}.zero_or_more()}.name("items") +
+                !str("end");
             visibility := str("pub").optional().run(run_visibility);
-            whitespace := str(" ") | str("\t");
-            newline := Misc::whitespace().zero_or_more() + str("\n") + Misc::whitespace().zero_or_more();
-            whitespace_or_newline := Misc::newline() | Misc::whitespace();
         }
     }
 }

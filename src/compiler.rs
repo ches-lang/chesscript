@@ -39,7 +39,7 @@ impl<'a> CsCompiler<'a> {
     pub fn bake_cake() -> Cake {
         let mut cake = Cake::new(RuleId("Main::main".to_string()));
         cake.add_module(Main::new());
-        cake.add_module(Misc::new());
+        cake.add_module(Symbol::new());
         cake.add_module(Expression::new());
         cake.add_module(Identifier::new());
         cake.add_module(Literal::new());

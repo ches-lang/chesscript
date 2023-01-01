@@ -32,7 +32,7 @@ impl SyntaxElementGenerator {
 
     pub fn visibility(visibility: &str) -> SyntaxChild {
         node!{
-            "Misc::visibility" => vec![
+            "Item::visibility" => vec![
                 leaf!(visibility),
             ]
         }
