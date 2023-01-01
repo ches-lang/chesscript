@@ -51,15 +51,16 @@ impl<'a> JsGenerator<'a> {
         format!("{}{}", js, exports)
     }
 
-    fn item(&mut self, item: &HirItem) -> String {
+    pub(crate) fn item(&mut self, item: &HirItem) -> String {
         match item {
             HirItem::Module(module) => self.module(module),
         }
     }
 
-    fn module(&mut self, module: &HirModule) -> String {
+    pub(crate) fn module(&mut self, module: &HirModule) -> String {
         let es_export = or_value!(self.options.module_style == JsModuleStyle::Es2015, "export ", "");
         self.item_identifiers.push(module.identifier.clone());
-        format!("{}namespace {}{{}}", es_export, module.identifier)
+        let sub_items = module.items.iter().map(|v| self.item(v)).collect::<Vec<String>>().join("");
+        format!("{}namespace {}{{{}}}", es_export, module.identifier, sub_items)
     }
 }
