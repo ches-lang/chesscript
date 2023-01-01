@@ -145,7 +145,11 @@ impl Module for DataType {
         add_rules!{
             data_type := DataType::primitive();
             primitive := str_choices(vec![
-                "s32", "u32", "f32", "char", "str",
+                "bool",
+                "s8", "s16", "s32", "s64", "ssize",
+                "u8", "u16", "u32", "u64", "usize",
+                "f32", "f64",
+                "char", "str",
             ]);
             annotation := !str(":") + !Symbol::whitespace().zero_or_more() + DataType::data_type();
         }
