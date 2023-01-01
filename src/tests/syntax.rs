@@ -1,5 +1,5 @@
 use crate::{compiler::{CsCompiler}, hir::{HirIdentifierKind}, tests::generator::SyntaxElementGenerator};
-use cake::{*, parser::{Parser, ParserResult}, RuleId, tree::*};
+use cake::{*, parser::{Parser, ParserResult, ParserError}, RuleId, tree::*};
 use speculate::speculate;
 
 speculate!{
@@ -9,8 +9,13 @@ speculate!{
         let assert_ast = |input: &str, rule_id: &str, expected: ParserResult|
             assert_eq!(Parser::parse_rule(&cake, &RuleId(rule_id.to_string()), input, 1024), expected);
 
+        #[allow(unused)]
         let expect_success = |input: &str, rule_id: &str, expected: SyntaxTree|
             assert_ast(input, rule_id, Ok(expected));
+
+        #[allow(unused)]
+        let expect_failure = |input: &str, rule_id: &str, expected: ParserError|
+            assert_ast(input, rule_id, Err(expected));
     }
 
     /* Main */
@@ -21,6 +26,26 @@ speculate!{
                 "Main::main" => vec![]
             }
         });
+    }
+
+    /* Keyword */
+
+    it "parse keyword" {
+        expect_success("s32", "Keyword::keyword", tree!{
+            SyntaxElementGenerator::keyword("s32")
+        });
+    }
+
+    /* Identifier */
+
+    it "parse identifier" {
+        expect_success("id", "Identifier::identifier", tree!{
+            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "id")
+        });
+    }
+
+    it "parse keyword as identifier" {
+        expect_failure("s32", "Identifier::identifier", ParserError::UnexpectedEndOfInput);
     }
 
     /* Item */

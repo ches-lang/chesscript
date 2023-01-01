@@ -97,6 +97,21 @@ impl Module for Expression {
     }
 }
 
+/* Keyword */
+
+#[derive(RuleContainer)]
+pub struct Keyword {
+    keyword: Element,
+}
+
+impl Module for Keyword {
+    fn new() -> Self {
+        add_rules!{
+            keyword := DataType::primitive().expand();
+        }
+    }
+}
+
 /* Identifier */
 
 #[derive(RuleContainer)]
@@ -109,7 +124,7 @@ pub struct Identifier {
 impl Module for Identifier {
     fn new() -> Self {
         add_rules!{
-            identifier := Identifier::pascal_case() | Identifier::snake_case();
+            identifier := g!{Identifier::pascal_case() | Identifier::snake_case()}.except(Keyword::keyword());
             pascal_case := g!{regex("[A-Z]") + regex("[a-zA-Z0-9_]").min(0)}.join();
             snake_case := g!{regex("[a-z]") + regex("[a-zA-Z0-9_]").min(0)}.join();
         }
@@ -129,7 +144,9 @@ impl Module for DataType {
     fn new() -> Self {
         add_rules!{
             data_type := DataType::primitive();
-            primitive := str("s32") | str("u32") | str("f32") | str("char") | str("str");
+            primitive := str_choices(vec![
+                "s32", "u32", "f32", "char", "str",
+            ]);
             annotation := !str(":") + !Symbol::whitespace().zero_or_more() + DataType::data_type();
         }
     }

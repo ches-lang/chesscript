@@ -41,6 +41,7 @@ impl<'a> CsCompiler<'a> {
         cake.add_module(Main::new());
         cake.add_module(Symbol::new());
         cake.add_module(Expression::new());
+        cake.add_module(Keyword::new());
         cake.add_module(Identifier::new());
         cake.add_module(DataType::new());
         cake.add_module(Literal::new());

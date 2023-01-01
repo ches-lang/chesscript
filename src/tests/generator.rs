@@ -1,6 +1,5 @@
-use cake::{*, tree::*};
-
 use crate::hir::HirIdentifierKind;
+use cake::{*, tree::*};
 
 pub(crate) struct SyntaxElementGenerator;
 
@@ -85,6 +84,14 @@ impl SyntaxElementGenerator {
         node!{
             "Item::visibility" => vec![
                 leaf!(visibility),
+            ]
+        }
+    }
+
+    pub fn keyword(value: &str) -> SyntaxChild {
+        node!{
+            "Keyword::keyword" => vec![
+                leaf!(value),
             ]
         }
     }
