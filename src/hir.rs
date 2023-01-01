@@ -45,29 +45,31 @@ impl<'a> HirGenerator<'a> {
         Ok((hir, self.logs))
     }
 
-    fn item(&mut self, node: &SyntaxNode) -> HirGeneratorResult<HirItem> {
+    pub(crate) fn item(&mut self, node: &SyntaxNode) -> HirGeneratorResult<HirItem> {
         let child_node = node.child_node_at(0);
 
         let item = match child_node.name.as_str() {
-            "Item::module" => {
-                let identifier_node  = child_node.search_node("Identifier::identifier").unwrap();
-                let identifier = self.identifier(identifier_node, HirIdentifierKind::PascalCase);
-                let visibility = HirVisibility::Private;
-
-                let module = HirModule {
-                    identifier: identifier,
-                    visibility: visibility,
-                };
-
-                HirItem::Module(module)
-            },
+            "Item::module" => HirItem::Module(self.module(child_node)?),
             _ => unreachable!(),
         };
 
         Ok(item)
     }
 
-    fn identifier(&mut self, node: &SyntaxNode, valid_identifier_kind: HirIdentifierKind) -> String {
+    pub(crate) fn module(&mut self, node: &SyntaxNode) -> HirGeneratorResult<HirModule> {
+        let identifier_node  = node.search_node("Identifier::identifier").unwrap();
+        let identifier = self.identifier(identifier_node, HirIdentifierKind::PascalCase);
+        let visibility = HirVisibility::Private;
+
+        let module = HirModule {
+            identifier: identifier,
+            visibility: visibility,
+        };
+
+        Ok(module)
+    }
+
+    pub(crate) fn identifier(&mut self, node: &SyntaxNode, valid_identifier_kind: HirIdentifierKind) -> String {
         let child_node = node.child_node_at(0);
 
         let identifier_kind = match child_node.name.as_str() {
@@ -87,23 +89,23 @@ impl<'a> HirGenerator<'a> {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Hir {
     pub items: Vec<HirItem>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum HirVisibility {
     Public,
     Private,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum HirItem {
     Module(HirModule),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct HirModule {
     pub identifier: String,
     pub visibility: HirVisibility,
