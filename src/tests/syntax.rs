@@ -51,24 +51,39 @@ speculate!{
     }
 
     it "parse private module" {
-        expect_success("mod Module\ntrue\nfalse\nend", "Item::module", tree!{
+        expect_success("mod Module\nend", "Item::module", tree!{
             SyntaxElementGenerator::module(
                 "private",
                 SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
-                vec![
-                    SyntaxElementGenerator::expression(SyntaxElementGenerator::boolean_literal("true")),
-                    SyntaxElementGenerator::expression(SyntaxElementGenerator::boolean_literal("false")),
-                ],
+                vec![],
             )
         });
     }
 
-    it "parse public module with non-pascal-case identifier" {
-        expect_success("pub mod module\nend", "Item::module", tree!{
+    it "parse public module" {
+        expect_success("pub mod Module\nend", "Item::module", tree!{
             SyntaxElementGenerator::module(
                 "pub",
-                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "module"),
+                SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
                 vec![],
+            )
+        });
+    }
+
+    it "parse sub item in module" {
+        expect_success("mod Module\n    mod SubModule\n    end\nend", "Item::module", tree!{
+            SyntaxElementGenerator::module(
+                "private",
+                SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
+                vec![
+                    SyntaxElementGenerator::item(
+                        SyntaxElementGenerator::module(
+                            "private",
+                            SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "SubModule"),
+                            vec![],
+                        ),
+                    ),
+                ],
             )
         });
     }

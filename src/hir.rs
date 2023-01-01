@@ -9,7 +9,7 @@ pub enum HirGeneratorError {}
 pub type HirGeneratorResult<T> = Result<T, HirGeneratorError>;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct HirGeneratorOptions {}
+pub struct HirGeneratorOptions;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirIdentifierKind {
@@ -60,10 +60,16 @@ impl<'a> HirGenerator<'a> {
         let identifier_node  = node.search_node("Identifier::identifier").unwrap();
         let identifier = self.identifier(identifier_node, HirIdentifierKind::PascalCase);
         let visibility = HirVisibility::Private;
+        let mut items = Vec::new();
+
+        for each_item in &node.search_node("items").unwrap().children {
+            items.push(self.item(each_item.into_node())?);
+        }
 
         let module = HirModule {
             identifier: identifier,
             visibility: visibility,
+            items: items,
         };
 
         Ok(module)
@@ -109,4 +115,5 @@ pub enum HirItem {
 pub struct HirModule {
     pub identifier: String,
     pub visibility: HirVisibility,
+    pub items: Vec<HirItem>,
 }

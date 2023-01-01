@@ -46,13 +46,13 @@ impl SyntaxElementGenerator {
         }
     }
 
-    pub fn module(visibility: &str, id: SyntaxChild, exprs: Vec<SyntaxChild>) -> SyntaxChild {
+    pub fn module(visibility: &str, id: SyntaxChild, items: Vec<SyntaxChild>) -> SyntaxChild {
         node!{
             "Item::module" => vec![
                 SyntaxElementGenerator::visibility(visibility),
                 id,
                 node!{
-                    "expressions" => exprs
+                    "items" => items
                 },
             ]
         }
