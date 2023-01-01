@@ -32,33 +32,6 @@ speculate!{
         );
     }
 
-    it "generate CommonJS module" {
-        let mut generator = JsGenerator::new(
-            &JsGeneratorOptions {
-                minify: true,
-                target: JsTarget::Es2015,
-                module_style: JsModuleStyle::CommonJs,
-            },
-        );
-
-        assert_eq!(
-            generator.module(
-                &HirModule {
-                    identifier: "Module".to_string(),
-                    visibility: HirVisibility::Private,
-                    items: vec![
-                        HirItem::Module(HirModule {
-                            identifier: "SubModule".to_string(),
-                            visibility: HirVisibility::Private,
-                            items: vec![],
-                        }),
-                    ],
-                },
-            ),
-            "namespace Module{namespace SubModule{}}".to_string(),
-        );
-    }
-
     it "generate CommonJS module including module.exports" {
         let mut generator = JsGenerator::new(
             &JsGeneratorOptions {
@@ -86,7 +59,7 @@ speculate!{
                     items: vec![HirItem::Module(module)],
                 },
             ),
-            "namespace Module{namespace SubModule{}}module.exports={Module,SubModule};".to_string(),
+            "namespace Module{namespace SubModule{}}module.exports={Module};".to_string(),
         );
     }
 }

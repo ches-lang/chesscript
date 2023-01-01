@@ -71,7 +71,7 @@ speculate!{
     }
 
     it "parse sub item in module" {
-        expect_success("mod Module\n    mod SubModule\n    end\nend", "Item::module", tree!{
+        expect_success("mod Module\nmod SubModule\nend\nend", "Item::module", tree!{
             SyntaxElementGenerator::module(
                 "private",
                 SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
