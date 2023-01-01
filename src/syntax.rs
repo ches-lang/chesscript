@@ -2,6 +2,8 @@ use std::rc::Rc;
 use cake::{*, tree::*};
 use cake_derive::RuleContainer;
 
+/* Main */
+
 #[derive(RuleContainer)]
 pub struct Main {
     main: Element,
@@ -16,6 +18,8 @@ impl Module for Main {
         }
     }
 }
+
+/* Symbol */
 
 #[derive(RuleContainer)]
 pub struct Symbol {
@@ -34,10 +38,15 @@ impl Module for Symbol {
     }
 }
 
+/* Item */
+
 #[derive(RuleContainer)]
 pub struct Item {
     item: Element,
     module: Element,
+    function: Element,
+    function_argument_group: Element,
+    function_argument: Element,
     visibility: Element,
 }
 
@@ -57,10 +66,23 @@ impl Module for Item {
             module := g!{Item::visibility() + whitespace(0)}.optional() + !str("mod") + whitespace(1) + Identifier::identifier() + newlines() +
                 g!{g!{Item::item() + newlines()}.zero_or_more()}.name("items") +
                 !str("end");
+            function := g!{Item::visibility() + whitespace(0)}.optional() + !str("fn") + whitespace(1) + Identifier::identifier() + whitespace(0) +
+                Item::function_argument_group() + whitespace(0) +
+                DataType::annotation().optional() + newlines() +
+                g!{g!{Expression::expression() + newlines()}.zero_or_more()}.name("expressions") +
+                !str("end");
+            function_argument_group := !str("(") + whitespace(0) +
+                g!{
+                    Item::function_argument() + g!{whitespace(0) + !str(",") + whitespace(0) + Item::function_argument()}.zero_or_more()
+                }.optional() + whitespace(0) +
+                !str(")");
+            function_argument := Identifier::identifier() + whitespace(0) + DataType::annotation();
             visibility := str("pub").optional().run(run_visibility);
         }
     }
 }
+
+/* Expression */
 
 #[derive(RuleContainer)]
 pub struct Expression {
@@ -74,6 +96,8 @@ impl Module for Expression {
         }
     }
 }
+
+/* Identifier */
 
 #[derive(RuleContainer)]
 pub struct Identifier {
@@ -91,6 +115,27 @@ impl Module for Identifier {
         }
     }
 }
+
+/* DataType */
+
+#[derive(RuleContainer)]
+pub struct DataType {
+    data_type: Element,
+    primitive: Element,
+    annotation: Element,
+}
+
+impl Module for DataType {
+    fn new() -> Self {
+        add_rules!{
+            data_type := DataType::primitive();
+            primitive := str("s32") | str("u32") | str("f32") | str("char") | str("str");
+            annotation := !str(":") + !Symbol::whitespace().zero_or_more() + DataType::data_type();
+        }
+    }
+}
+
+/* Literal */
 
 #[derive(RuleContainer)]
 pub struct Literal {
