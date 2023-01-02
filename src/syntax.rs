@@ -168,10 +168,6 @@ pub struct Literal {
     float: Element,
     character: Element,
     string: Element,
-    raw_string: Element,
-    template_string: Element,
-    regex_string: Element,
-    object: Element,
 
     /* Materials */
     single_character: Element,
@@ -198,10 +194,7 @@ impl Module for Literal {
                 Literal::float() |
                 Literal::integer() |
                 Literal::character() |
-                Literal::string() |
-                Literal::raw_string() |
-                Literal::template_string() |
-                Literal::object();
+                Literal::string();
             boolean := str("true") | str("false");
             integer :=
                 g!{
@@ -223,15 +216,11 @@ impl Module for Literal {
                     number_chain(regex("[0-9]")).group().name("integer") + !str(".") + number_chain(regex("[0-9]")).group().name("decimal")
                 } +
                 DataType::float().expand().name("data_type_suffix").optional();
-            character := !str("'") + Literal::single_character().expand().except(str("\\'")) + !str("'");
-            string := str("?");
-            raw_string := str("?");
-            template_string := str("?");
-            regex_string := str("?");
-            object := str("?");
+            character := !str("'") + Literal::single_character().except(str("'") | str("\\\"")) + !str("'");
+            string := !str("\"") + g!{Literal::single_character().except(str("\n") | str("\"") | str("\\'"))}.group().zero_or_more() + !str("\"");
 
             /* Materials */
-            single_character := Literal::escape_sequence() | wildcard().except(str("\\"));
+            single_character := Literal::escape_sequence() | wildcard().except(str("\n") | str("\\"));
             escape_sequence := !str("\\") + g!{
                 Literal::general_escape_suffix() |
                 Literal::unicode_escape_suffix()
@@ -240,7 +229,7 @@ impl Module for Literal {
                 // todo: Add characters.
                 "0", "b", "n", "t", "\\",
             ]);
-            unicode_escape_suffix := !str("u{") + regex("[0-9a-f]").min(1).max(6) + !str("}");
+            unicode_escape_suffix := !str("u{") + regex("[0-9a-f]").min(1).max(6).group().join() + !str("}");
         }
     }
 }

@@ -147,6 +147,32 @@ impl SyntaxElementGenerator {
         })
     }
 
+    pub fn single_character(character: SyntaxChild) -> SyntaxChild {
+        node!{
+            "Literal::single_character" => vec![
+                character,
+            ]
+        }
+    }
+
+    pub fn character_literal(character: SyntaxChild) -> SyntaxChild {
+        SyntaxElementGenerator::literal(
+            node!{
+                "Literal::character" => vec![
+                    character,
+                ]
+            },
+        )
+    }
+
+    pub fn string_literal(characters: Vec<SyntaxChild>) -> SyntaxChild {
+        SyntaxElementGenerator::literal(
+            node!{
+                "Literal::string" => characters
+            },
+        )
+    }
+
     pub fn escape_sequence(suffix: SyntaxChild) -> SyntaxChild {
         node!{
             "Literal::escape_sequence" => vec![
@@ -160,6 +186,16 @@ impl SyntaxElementGenerator {
             node!{
                 "Literal::general_escape_suffix" => vec![
                     leaf!(character),
+                ]
+            },
+        )
+    }
+
+    pub fn unicode_escape_sequence(unicode: &str) -> SyntaxChild {
+        SyntaxElementGenerator::escape_sequence(
+            node!{
+                "Literal::unicode_escape_suffix" => vec![
+                    leaf!(unicode),
                 ]
             },
         )

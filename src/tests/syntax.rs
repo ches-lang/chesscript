@@ -133,9 +133,74 @@ speculate!{
         expect_failure("000.000s32", "Literal::literal", ParserError::ExpectedEndOfInput);
     }
 
+    it "parse character literal" {
+        expect_success("'a'", "Literal::literal", tree!{
+            SyntaxElementGenerator::character_literal(
+                SyntaxElementGenerator::single_character(leaf!("a")),
+            )
+        });
+    }
+
+    it "parse character literal including escape sequence" {
+        expect_success("'\\u{0}'", "Literal::literal", tree!{
+            SyntaxElementGenerator::character_literal(
+                SyntaxElementGenerator::single_character(
+                    SyntaxElementGenerator::unicode_escape_sequence("0"),
+                ),
+            )
+        });
+    }
+
+    it "parse character literal including newline" {
+        expect_failure("'\n'", "Literal::literal", ParserError::UnexpectedEndOfInput);
+    }
+
+    it "parse character literal including single quotation" {
+        expect_failure("'''", "Literal::literal", ParserError::UnexpectedEndOfInput);
+    }
+
+    it "parse character literal including double quotation escape" {
+        expect_failure("'\\\"'", "Literal::literal", ParserError::UnexpectedEndOfInput);
+    }
+
+    it "parse empty string literal" {
+        expect_success("\"\"", "Literal::literal", tree!{
+            SyntaxElementGenerator::string_literal(vec![])
+        });
+    }
+
+    it "parse string literal" {
+        expect_success("\"a\\n\"", "Literal::literal", tree!{
+            SyntaxElementGenerator::string_literal(vec![
+                SyntaxElementGenerator::single_character(leaf!("a")),
+                SyntaxElementGenerator::single_character(
+                    SyntaxElementGenerator::general_escape_sequence("n"),
+                ),
+            ])
+        });
+    }
+
+    it "parse string literal including newline" {
+        expect_failure("\"\n\"", "Literal::literal", ParserError::UnexpectedEndOfInput);
+    }
+
+    it "parse string literal including double quotation" {
+        expect_failure("\"\"\"", "Literal::literal", ParserError::ExpectedEndOfInput);
+    }
+
+    it "parse string literal including single quotation escape" {
+        expect_failure("\"\\'\"", "Literal::literal", ParserError::UnexpectedEndOfInput);
+    }
+
     it "parse general escape sequence" {
         expect_success("\\n", "Literal::escape_sequence", tree!{
             SyntaxElementGenerator::general_escape_sequence("n")
+        });
+    }
+
+    it "parse unicode escape sequence" {
+        expect_success("\\u{012def}", "Literal::escape_sequence", tree!{
+            SyntaxElementGenerator::unicode_escape_sequence("012def")
         });
     }
 
