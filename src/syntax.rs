@@ -137,6 +137,8 @@ impl Module for Identifier {
 pub struct DataType {
     data_type: Element,
     primitive: Element,
+    integer: Element,
+    float: Element,
     annotation: Element,
 }
 
@@ -144,13 +146,12 @@ impl Module for DataType {
     fn new() -> Self {
         add_rules!{
             data_type := DataType::primitive();
-            primitive := str_choices(vec![
-                "bool",
+            primitive := str_choices(vec!["bool", "char", "str"]) | DataType::integer().expand() | DataType::float().expand();
+            integer := str_choices(vec![
                 "s8", "s16", "s32", "s64", "ssize",
                 "u8", "u16", "u32", "u64", "usize",
-                "f32", "f64",
-                "char", "str",
             ]);
+            float := str_choices(vec!["f32", "f64"]);
             annotation := !str(":") + !Symbol::whitespace().zero_or_more() + DataType::data_type();
         }
     }
@@ -162,13 +163,84 @@ impl Module for DataType {
 pub struct Literal {
     literal: Element,
     boolean: Element,
+    integer: Element,
+    based_integer: Element,
+    float: Element,
+    character: Element,
+    string: Element,
+    raw_string: Element,
+    template_string: Element,
+    regex_string: Element,
+    object: Element,
+
+    /* Materials */
+    single_character: Element,
+    escape_sequence: Element,
+    general_escape_suffix: Element,
+    unicode_escape_suffix: Element,
 }
 
 impl Module for Literal {
     fn new() -> Self {
+        let number_chain = |digit: Element| g!{
+            g!{
+                digit.clone().min(1).max(3) +
+                g!{
+                    !str("_") + digit.clone().times(3)
+                }.one_or_more()
+            } |
+            digit.one_or_more()
+        }.join();
+
         add_rules!{
-            literal := Literal::boolean();
+            literal :=
+                Literal::boolean() |
+                Literal::float() |
+                Literal::integer() |
+                Literal::character() |
+                Literal::string() |
+                Literal::raw_string() |
+                Literal::template_string() |
+                Literal::object();
             boolean := str("true") | str("false");
+            integer :=
+                g!{
+                    Literal::based_integer().expand() | number_chain(regex("[0-9]")).group().name("dec")
+                } +
+                DataType::integer().expand().name("data_type_suffix").optional();
+            based_integer :=
+                g!{
+                    !str("0b") + number_chain(regex("[0-1]"))
+                }.name("bin") |
+                g!{
+                    !str("0o") + number_chain(regex("[0-7]"))
+                }.name("oct") |
+                g!{
+                    !str("0x") + number_chain(regex("[0-9a-f]"))
+                }.name("hex");
+            float :=
+                g!{
+                    number_chain(regex("[0-9]")).group().name("integer") + !str(".") + number_chain(regex("[0-9]")).group().name("decimal")
+                } +
+                DataType::float().expand().name("data_type_suffix").optional();
+            character := !str("'") + Literal::single_character().expand().except(str("\\'")) + !str("'");
+            string := str("?");
+            raw_string := str("?");
+            template_string := str("?");
+            regex_string := str("?");
+            object := str("?");
+
+            /* Materials */
+            single_character := Literal::escape_sequence() | wildcard().except(str("\\"));
+            escape_sequence := !str("\\") + g!{
+                Literal::general_escape_suffix() |
+                Literal::unicode_escape_suffix()
+            };
+            general_escape_suffix := str_choices(vec![
+                // todo: Add characters.
+                "0", "b", "n", "t", "\\",
+            ]);
+            unicode_escape_suffix := !str("u{") + regex("[0-9a-f]").min(1).max(6) + !str("}");
         }
     }
 }

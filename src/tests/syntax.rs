@@ -45,7 +45,98 @@ speculate!{
     }
 
     it "parse keyword as identifier" {
+        // todo: Review
         expect_failure("s32", "Identifier::identifier", ParserError::UnexpectedEndOfInput);
+    }
+
+    /* DataType */
+
+    it "parse primitive type" {
+        expect_success("s32", "DataType::data_type", tree!{
+            SyntaxElementGenerator::data_type(
+                SyntaxElementGenerator::primitive_data_type("s32"),
+            )
+        });
+    }
+
+    /* Literal */
+
+    it "parse boolean literal" {
+        expect_success("true", "Literal::literal", tree!{
+            SyntaxElementGenerator::boolean_literal("true")
+        });
+    }
+
+    it "parse integer literal" {
+        expect_success("000", "Literal::literal", tree!{
+            SyntaxElementGenerator::integer_literal("dec", "000", None)
+        });
+    }
+
+    it "parse bin integer literal" {
+        expect_success("0b0_111", "Literal::literal", tree!{
+            SyntaxElementGenerator::integer_literal("bin", "0111", None)
+        });
+    }
+
+    it "parse oct integer literal" {
+        expect_success("0o01_234_567", "Literal::literal", tree!{
+            SyntaxElementGenerator::integer_literal("oct", "01234567", None)
+        });
+    }
+
+    it "parse hex integer literal" {
+        expect_success("0x0_123_456_789_abc_def", "Literal::literal", tree!{
+            SyntaxElementGenerator::integer_literal("hex", "0123456789abcdef", None)
+        });
+    }
+
+    it "parse integer literal with integer type suffix" {
+        expect_success("000s32", "Literal::literal", tree!{
+            SyntaxElementGenerator::integer_literal("dec", "000", Some("s32"))
+        });
+    }
+
+    it "parse integer literal with float type suffix" {
+        expect_failure("0f32", "Literal::literal", ParserError::ExpectedEndOfInput);
+    }
+
+    it "parse number chain without separator" {
+        expect_success("1000", "Literal::literal", tree!{
+            SyntaxElementGenerator::integer_literal("dec", "1000", None)
+        });
+    }
+
+    it "parse number chain with separators" {
+        expect_success("10_000_000", "Literal::literal", tree!{
+            SyntaxElementGenerator::integer_literal("dec", "10000000", None)
+        });
+    }
+
+    it "parse float literal" {
+        expect_success("000.000", "Literal::literal", tree!{
+            SyntaxElementGenerator::float_literal("000", "000", None)
+        });
+    }
+
+    it "parse float literal with and without separator" {
+        expect_failure("000.000_0", "Literal::literal", ParserError::ExpectedEndOfInput);
+    }
+
+    it "parse float literal with float type suffix" {
+        expect_success("000.000f32", "Literal::literal", tree!{
+            SyntaxElementGenerator::float_literal("000", "000", Some("f32"))
+        });
+    }
+
+    it "parse float literal with integer type suffix" {
+        expect_failure("000.000s32", "Literal::literal", ParserError::ExpectedEndOfInput);
+    }
+
+    it "parse general escape sequence" {
+        expect_success("\\n", "Literal::escape_sequence", tree!{
+            SyntaxElementGenerator::general_escape_sequence("n")
+        });
     }
 
     /* Item */
