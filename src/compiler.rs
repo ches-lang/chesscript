@@ -1,7 +1,7 @@
 pub mod log;
 
 use std::result::Result;
-use crate::{syntax::*, js::{JsGenerator, JsGeneratorOptions}, hir::{HirGenerator, HirGeneratorOptions, Hir, HirGeneratorError}};
+use crate::{syntax::*, js::{JsGenerator, JsGeneratorOptions, JsStringifier}, hir::{HirGenerator, HirGeneratorOptions, Hir, HirGeneratorError}};
 use cake::{Cake, RuleId, Module, parser::ParserError, tree::SyntaxTree};
 
 use self::log::CompilerLog;
@@ -54,7 +54,7 @@ impl<'a> CsCompiler<'a> {
         let tree = self.parse(&cake)?;
         let (hir, logs) = self.generate_hir(&tree)?;
         let mut generator = JsGenerator::new(&self.options.generator_options);
-        let js = generator.generate(&hir);
+        let js = generator.generate(&hir).stringify();
         Ok((js, logs))
     }
 

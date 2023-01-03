@@ -1,4 +1,4 @@
-use crate::{js::{JsModuleStyle, JsTarget, JsGeneratorOptions, JsGenerator}, hir::*};
+use crate::{js::*, hir::*};
 use speculate::speculate;
 
 speculate!{
@@ -11,7 +11,7 @@ speculate!{
         };
     }
 
-    it "generate ES module" {
+    it "jsify ES module" {
         let mut generator = JsGenerator::new(default_js_options);
 
         assert_eq!(
@@ -27,12 +27,12 @@ speculate!{
                         }),
                     ],
                 },
-            ),
+            ).stringify(),
             "export namespace Module{export namespace SubModule{}}".to_string(),
         );
     }
 
-    it "generate CommonJS module including module.exports" {
+    it "jsify CommonJS module including module.exports" {
         let mut generator = JsGenerator::new(
             &JsGeneratorOptions {
                 minify: true,
@@ -58,7 +58,7 @@ speculate!{
                 &Hir {
                     items: vec![HirItem::Module(module)],
                 },
-            ),
+            ).stringify(),
             "namespace Module{namespace SubModule{}}module.exports={Module};".to_string(),
         );
     }

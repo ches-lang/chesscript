@@ -1,7 +1,6 @@
-use std::{result::Result, num::IntErrorKind};
+use std::{result::Result};
 use cake::tree::*;
-
-use crate::{compiler::log::{CompilerLog, CompilerWarningLog, CompilerErrorLog}, syntax::Expression};
+use crate::{compiler::log::{CompilerLog, CompilerWarningLog, CompilerErrorLog}};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirGeneratorError {}
@@ -273,6 +272,7 @@ pub enum HirNumberBase {
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirLiteral {
     Boolean { value: String },
+    // fix: String to u64
     Integer { base: HirNumberBase, integer: String, data_type: Option<HirDataType> },
     Float { integer: String, decimal: String, data_type: Option<HirDataType> },
     Character { character: char },
