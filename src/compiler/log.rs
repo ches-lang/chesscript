@@ -7,6 +7,8 @@ pub enum CompilerLog {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum CompilerErrorLog {
+    NumberLiteralIsTooLarge,
+    UnicodeEscapeSequenceIsInvalid { unicode: String },
 }
 
 #[derive(Clone, Debug, PartialEq)]

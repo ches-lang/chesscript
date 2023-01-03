@@ -92,7 +92,9 @@ pub struct Expression {
 impl Module for Expression {
     fn new() -> Self {
         add_rules!{
-            expression := Literal::literal();
+            expression :=
+                Literal::literal() |
+                DataType::data_type();
         }
     }
 }
@@ -227,7 +229,7 @@ impl Module for Literal {
             };
             general_escape_suffix := str_choices(vec![
                 // todo: Add characters.
-                "0", "b", "n", "t", "\\",
+                "0", "n", "t", "\\",
             ]);
             unicode_escape_suffix := !str("u{") + regex("[0-9a-f]").min(1).max(6).group().join() + !str("}");
         }
