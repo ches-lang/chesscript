@@ -56,8 +56,8 @@ impl<'a> HirGenerator<'a> {
     }
 
     pub fn module(&mut self, node: &SyntaxNode) -> HirGeneratorResult<HirModule> {
-        let identifier_node  = node.search_node("Identifier::identifier").unwrap();
-        let identifier = self.identifier(identifier_node, HirIdentifierKind::PascalCase);
+        let id_node  = node.search_node("Identifier::identifier").unwrap();
+        let id = self.identifier(id_node, HirIdentifierKind::PascalCase);
         let visibility = HirVisibility::Private;
         let mut items = Vec::new();
 
@@ -66,7 +66,7 @@ impl<'a> HirGenerator<'a> {
         }
 
         let module = HirModule {
-            identifier: identifier,
+            id: id,
             visibility: visibility,
             items: items,
         };
@@ -250,7 +250,7 @@ pub enum HirItem {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirModule {
-    pub identifier: String,
+    pub id: String,
     pub visibility: HirVisibility,
     pub items: Vec<HirItem>,
 }

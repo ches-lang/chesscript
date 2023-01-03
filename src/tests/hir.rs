@@ -27,11 +27,11 @@ speculate!{
                 ).into_node(),
             ).unwrap(),
             HirModule {
-                identifier: "Module".to_string(),
+                id: "Module".to_string(),
                 visibility: HirVisibility::Private,
                 items: vec![
                     HirItem::Module(HirModule {
-                        identifier: "SubModule".to_string(),
+                        id: "SubModule".to_string(),
                         visibility: HirVisibility::Private,
                         items: vec![],
                     }),

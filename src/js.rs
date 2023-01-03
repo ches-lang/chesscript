@@ -56,7 +56,7 @@ impl<'a> JsGenerator<'a> {
         }
 
         Js {
-            statements: stmts,
+            stmts,
         }
     }
 
@@ -70,12 +70,12 @@ impl<'a> JsGenerator<'a> {
         self.module_stack.push(module);
 
         if self.module_stack.len() == 1 {
-            self.item_id_pool.push(module.identifier.clone());
+            self.item_id_pool.push(module.id.clone());
         }
 
         let es_export = self.options.module_style == JsModuleStyle::Es2015;
         let stmts = module.items.iter().map(|v| self.item(v)).collect();
-        JsStatement::NamespaceDefinition { es_export: es_export, id: module.identifier.clone(), statements: stmts }
+        JsStatement::NamespaceDefinition { es_export: es_export, id: module.id.clone(), statements: stmts }
     }
 }
 
@@ -105,12 +105,12 @@ macro_rules! stringify_vec {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Js {
-    statements: Vec<JsStatement>,
+    stmts: Vec<JsStatement>,
 }
 
 impl JsStringifier for Js {
     fn stringify(&self) -> String {
-        stringify_vec!(self.statements)
+        stringify_vec!(self.stmts)
     }
 }
 
