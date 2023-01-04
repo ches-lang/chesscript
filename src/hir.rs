@@ -58,8 +58,7 @@ impl<'a> HirGenerator<'a> {
     pub fn module(&mut self, node: &SyntaxNode) -> HirGeneratorResult<HirModule> {
         let id_node  = node.search_node("Identifier::identifier").unwrap();
         let id = self.identifier(id_node, HirIdentifierKind::PascalCase);
-        // fix, test
-        let visibility = HirVisibility::Private;
+        let visibility = self.visibility(node.search_node("Item::visibility").unwrap());
         let mut items = Vec::new();
 
         for each_item in &node.search_node("items").unwrap().children {

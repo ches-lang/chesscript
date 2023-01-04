@@ -7,7 +7,45 @@ speculate!{
         let default_hir_options = HirGeneratorOptions {};
     }
 
-    it "hirize module" {
+    it "hirize private module" {
+        let mut generator = HirGenerator::new(&default_hir_options);
+
+        assert_eq!(
+            generator.module(
+                &SyntaxElementGenerator::module(
+                    "private",
+                    SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
+                    vec![],
+                ).into_node(),
+            ).unwrap(),
+            HirModule {
+                id: "Module".to_string(),
+                visibility: HirVisibility::Private,
+                items: vec![],
+            },
+        );
+    }
+
+    it "hirize public module" {
+        let mut generator = HirGenerator::new(&default_hir_options);
+
+        assert_eq!(
+            generator.module(
+                &SyntaxElementGenerator::module(
+                    "pub",
+                    SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
+                    vec![],
+                ).into_node(),
+            ).unwrap(),
+            HirModule {
+                id: "Module".to_string(),
+                visibility: HirVisibility::Public,
+                items: vec![],
+            },
+        );
+    }
+
+    it "hirize module with items" {
         let mut generator = HirGenerator::new(&default_hir_options);
 
         assert_eq!(
