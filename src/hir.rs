@@ -1,4 +1,4 @@
-use std::{result::Result};
+use std::{result::Result, fmt::{Display, Formatter}};
 use cake::tree::*;
 use crate::{compiler::log::{CompilerLog, CompilerWarningLog, CompilerErrorLog}};
 
@@ -372,6 +372,30 @@ pub enum HirPrimitiveDataType {
     F64,
     Character,
     String,
+}
+
+impl Display for HirPrimitiveDataType {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        let s = match self {
+            HirPrimitiveDataType::Boolean => "bool",
+            HirPrimitiveDataType::S8 => "s8",
+            HirPrimitiveDataType::S16 => "s16",
+            HirPrimitiveDataType::S32 => "s32",
+            HirPrimitiveDataType::S64 => "s64",
+            HirPrimitiveDataType::SSize => "ssize",
+            HirPrimitiveDataType::U8 => "u8",
+            HirPrimitiveDataType::U16 => "u16",
+            HirPrimitiveDataType::U32 => "u32",
+            HirPrimitiveDataType::U64 => "u64",
+            HirPrimitiveDataType::USize => "usize",
+            HirPrimitiveDataType::F32 => "f32",
+            HirPrimitiveDataType::F64 => "f64",
+            HirPrimitiveDataType::Character => "char",
+            HirPrimitiveDataType::String => "str",
+        };
+
+        write!(f, "{}", s)
+    }
 }
 
 impl From<&str> for HirPrimitiveDataType {
