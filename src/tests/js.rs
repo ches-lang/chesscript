@@ -62,4 +62,29 @@ speculate!{
             "namespace Module{namespace SubModule{}}module.exports={Module};".to_string(),
         );
     }
+
+    it "jsify function" {
+        let mut generator = JsGenerator::new(default_js_options);
+
+        assert_eq!(
+            generator.function(
+                &HirFunction {
+                    id: "f".to_string(),
+                    visibility: HirVisibility::Private,
+                    args: vec![
+                        HirFunctionFormalArgument {
+                            id: "arg".to_string(),
+                            data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
+                        },
+                    ],
+                    return_type: None,
+                    exprs: vec![
+                        HirExpression::Literal(HirLiteral::Boolean { value: true }),
+                        HirExpression::Literal(HirLiteral::Boolean { value: true }),
+                    ],
+                },
+            ).stringify(),
+            "export function f(arg){true;return true;}".to_string(),
+        );
+    }
 }

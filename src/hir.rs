@@ -1,4 +1,4 @@
-use std::{result::Result, fmt::{Display, Formatter}};
+use std::{result::Result, fmt::{Display, Formatter}, num::IntErrorKind, error::Error};
 use cake::tree::*;
 use crate::{compiler::log::{CompilerLog, CompilerWarningLog, CompilerErrorLog}};
 
@@ -177,11 +177,12 @@ impl<'a> HirGenerator<'a> {
         let child_node = node.child_node_at(0);
 
         let literal = match child_node.name.as_str() {
-            "Literal::boolean" => HirLiteral::Boolean { value: child_node.child_leaf_at(0).value.clone() },
+            "Literal::boolean" => {
+                let str_value = child_node.child_leaf_at(0).value.clone();
+                HirLiteral::Boolean { value: str_value == "true" }
+            },
             "Literal::integer" => {
                 let based_integer_node = child_node.child_node_at(0);
-                let integer = based_integer_node.child_leaf_at(0).value.clone();
-
                 let base = match based_integer_node.name.as_str() {
                     "bin" => HirNumberBase::Binary,
                     "dec" => HirNumberBase::Decimal,
@@ -190,6 +191,19 @@ impl<'a> HirGenerator<'a> {
                     _ => unreachable!(),
                 };
 
+                let str_value = &based_integer_node.child_leaf_at(0).value;
+
+                let value = match u64::from_str_radix(str_value, base.to_radix()) {
+                    Ok(v) => v,
+                    Err(e) => match e.kind() {
+                        IntErrorKind::PosOverflow | IntErrorKind::NegOverflow => {
+                            self.logs.push(CompilerLog::Error(CompilerErrorLog::NumberLiteralIsTooLarge));
+                            return None;
+                        },
+                        _ => unreachable!(),
+                    },
+                };
+
                 let data_type = match child_node.search_node("data_type_suffix") {
                     Some(type_suffix_node) => {
                         let type_suffix = HirDataType::Primitive(
@@ -203,11 +217,17 @@ impl<'a> HirGenerator<'a> {
                     None => None,
                 };
 
-                HirLiteral::Integer { base: base, integer: integer, data_type: data_type }
+                HirLiteral::Integer { base: base, value: value, data_type: data_type }
             },
             "Literal::float" => {
+                // fix: join integer and decimal at syntax definition
                 let integer = child_node.search_node("integer").unwrap().child_leaf_at(0).value.clone();
                 let decimal = child_node.search_node("decimal").unwrap().child_leaf_at(0).value.clone();
+                let str_value = format!("{}.{}", integer, decimal);
+                let value = match str_value.parse::<f64>() {
+                    Ok(v) => v,
+                    Err(e) => panic!("{:?}", e),
+                };
 
                 let data_type = match child_node.search_node("data_type_suffix") {
                     Some(type_suffix_node) => {
@@ -222,10 +242,10 @@ impl<'a> HirGenerator<'a> {
                     None => None,
                 };
 
-                HirLiteral::Float { integer: integer, decimal: decimal, data_type: data_type }
+                HirLiteral::Float { value: value, data_type: data_type }
             },
             "Literal::character" => match self.single_character(child_node.child_node_at(0)) {
-                Some(v) => HirLiteral::Character { character: v },
+                Some(v) => HirLiteral::Character { value: v },
                 None => return None,
             },
             "Literal::string" => {
@@ -240,7 +260,7 @@ impl<'a> HirGenerator<'a> {
                     string.push(new_character);
                 }
 
-                HirLiteral::String { string: string }
+                HirLiteral::String { value: string }
             },
             _ => unimplemented!(),
         };
@@ -339,14 +359,25 @@ pub enum HirNumberBase {
     Hexadecimal,
 }
 
+impl HirNumberBase {
+    pub fn to_radix(&self) -> u32 {
+        match self {
+            HirNumberBase::Binary => 2,
+            HirNumberBase::Octal => 8,
+            HirNumberBase::Decimal => 10,
+            HirNumberBase::Hexadecimal => 16,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirLiteral {
-    Boolean { value: String },
+    Boolean { value: bool },
     // fix: String to u64
-    Integer { base: HirNumberBase, integer: String, data_type: Option<HirDataType> },
-    Float { integer: String, decimal: String, data_type: Option<HirDataType> },
-    Character { character: char },
-    String { string: String },
+    Integer { base: HirNumberBase, value: u64, data_type: Option<HirDataType> },
+    Float { value: f64, data_type: Option<HirDataType> },
+    Character { value: char },
+    String { value: String },
 }
 
 #[derive(Clone, Debug, PartialEq)]

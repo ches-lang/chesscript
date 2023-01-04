@@ -226,7 +226,7 @@ speculate!{
                 visibility: HirVisibility::Public,
                 args: Vec::new(),
                 return_type: None,
-                exprs: vec![HirExpression::Literal(HirLiteral::Boolean { value: "true".to_string() })],
+                exprs: vec![HirExpression::Literal(HirLiteral::Boolean { value: true })],
             },
         );
     }
@@ -287,7 +287,7 @@ speculate!{
                     SyntaxElementGenerator::boolean_literal("true"),
                 ).into_node(),
             ),
-            Some(HirExpression::Literal(HirLiteral::Boolean { value: "true".to_string() })),
+            Some(HirExpression::Literal(HirLiteral::Boolean { value: true })),
         );
     }
 
@@ -304,7 +304,7 @@ speculate!{
                 HirExpression::Literal(
                     HirLiteral::Integer {
                         base: HirNumberBase::Decimal,
-                        integer: "012".to_string(),
+                        value: 12,
                         data_type: None,
                     },
                 ),
@@ -325,7 +325,7 @@ speculate!{
                 HirExpression::Literal(
                     HirLiteral::Integer {
                         base: HirNumberBase::Decimal,
-                        integer: "012".to_string(),
+                        value: 12,
                         data_type: Some(HirDataType::Primitive(HirPrimitiveDataType::S32)),
                     },
                 ),
@@ -405,7 +405,7 @@ speculate!{
                     ),
                 ).into_node(),
             ),
-            Some(HirExpression::Literal(HirLiteral::Character { character: 'a' })),
+            Some(HirExpression::Literal(HirLiteral::Character { value: 'a' })),
         );
     }
 
@@ -430,7 +430,7 @@ speculate!{
                     ),
                 ).into_node(),
             ),
-            Some(HirExpression::Literal(HirLiteral::String { string: "a\n\0".to_string() })),
+            Some(HirExpression::Literal(HirLiteral::String { value: "a\n\0".to_string() })),
         );
     }
 

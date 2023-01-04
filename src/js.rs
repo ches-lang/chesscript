@@ -60,6 +60,10 @@ impl<'a> JsGenerator<'a> {
         }
     }
 
+    pub fn is_es_module(&self) -> bool {
+        self.options.module_style == JsModuleStyle::Es2015
+    }
+
     pub fn item(&mut self, item: &'a HirItem) -> JsStatement {
         match item {
             HirItem::Module(module) => self.module(module),
@@ -74,13 +78,46 @@ impl<'a> JsGenerator<'a> {
             self.item_id_pool.push(module.id.clone());
         }
 
-        let es_export = self.options.module_style == JsModuleStyle::Es2015;
         let stmts = module.items.iter().map(|v| self.item(v)).collect();
-        JsStatement::NamespaceDefinition { es_export: es_export, id: module.id.clone(), statements: stmts }
+        JsStatement::NamespaceDefinition { es_export: self.is_es_module(), id: module.id.clone(), stmts }
     }
 
     pub fn function(&mut self, function: &'a HirFunction) -> JsStatement {
-        unimplemented!()
+        let args = function.args.iter().map(|v| v.id.clone()).collect();
+        let mut stmts: Vec<JsStatement> = function.exprs[0..function.exprs.len() - 1].iter().map(|v| self.expression(v)).collect();
+
+        if let Some(v) = function.exprs.last() {
+            let return_expr = match self.expression(v) {
+                JsStatement::Expression(expr) => expr,
+                _ => unreachable!(),
+            };
+
+            let last_stmt = JsStatement::ReturnValue { expr: return_expr };
+            stmts.push(last_stmt);
+        }
+
+        JsStatement::FunctionDefinition { es_export: self.is_es_module(), id: function.id.clone(), args: args, stmts: stmts }
+    }
+
+    pub fn expression(&mut self, expr: &'a HirExpression) -> JsStatement {
+        match expr {
+            HirExpression::DataType(data_type) => match data_type {
+                HirDataType::Primitive(primitive) => JsStatement::Expression(JsExpression::Identifier(primitive.to_string())),
+                HirDataType::Named(id) => JsStatement::Expression(JsExpression::Identifier(id.clone())),
+            },
+            HirExpression::Literal(literal) => {
+                let js_literal = match literal {
+                    HirLiteral::Boolean { value } => JsLiteral::Boolean { value: *value },
+                    // fix: use base
+                    HirLiteral::Integer { base, value, data_type } => JsLiteral::Integer { value: *value },
+                    HirLiteral::Float { value, data_type } => JsLiteral::Float { value: *value },
+                    HirLiteral::Character { value } => JsLiteral::Character { value: *value },
+                    HirLiteral::String { value } => JsLiteral::String { value: value.clone() },
+                };
+
+                JsStatement::Expression(JsExpression::Literal(js_literal))
+            },
+        }
     }
 }
 
@@ -122,21 +159,32 @@ impl JsStringifier for Js {
 #[derive(Clone, Debug, PartialEq)]
 pub enum JsStatement {
     Expression(JsExpression),
-    NamespaceDefinition { es_export: bool, id: String, statements: Vec<JsStatement> },
+    FunctionDefinition { es_export: bool, id: String, args: Vec<String>, stmts: Vec<JsStatement> },
+    NamespaceDefinition { es_export: bool, id: String, stmts: Vec<JsStatement> },
     Substitution { left: Box<JsExpression>, right: Box<JsExpression> },
+    ReturnValue { expr: JsExpression },
 }
 
 impl JsStringifier for JsStatement {
     fn stringify(&self) -> String {
         match self {
             JsStatement::Expression(expr) => format!("{};", expr.stringify()),
-            JsStatement::NamespaceDefinition { es_export, id, statements } => {
+            JsStatement::FunctionDefinition { es_export, id, args, stmts } => {
                 let str_es_export = or_value!(*es_export, "export ", "");
-                let str_stmts = statements.iter().map(|v| v.stringify()).collect::<Vec<String>>().join("");
+                let str_stmts = stringify_vec!(stmts);
+                let args = args.join(",");
+                format!("{}function {}({}){{{}}}", str_es_export, id, args, str_stmts)
+            },
+            JsStatement::NamespaceDefinition { es_export, id, stmts: statements } => {
+                let str_es_export = or_value!(*es_export, "export ", "");
+                let str_stmts = stringify_vec!(statements);
                 format!("{}namespace {}{{{}}}", str_es_export, id, str_stmts)
             },
             JsStatement::Substitution { left, right } => (
                 format!("{}={};", left.stringify(), right.stringify())
+            ),
+            JsStatement::ReturnValue { expr } => (
+                format!("return {};", expr.stringify())
             ),
         }
     }
@@ -161,12 +209,12 @@ impl JsStringifier for JsExpression {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum JsLiteral {
-    Boolean { value: String },
+    Boolean { value: bool },
     // fix: add base
-    Integer { integer: u64 },
-    Float { float: f64 },
-    Character { character: char },
-    String { string: String },
+    Integer { value: u64 },
+    Float { value: f64 },
+    Character { value: char },
+    String { value: String },
     Object { exprs: Vec<JsExpression> },
 }
 
@@ -174,11 +222,11 @@ impl JsStringifier for JsLiteral {
     fn stringify(&self) -> String {
         match self {
             JsLiteral::Boolean { value } => value.to_string(),
-            JsLiteral::Integer { integer } => integer.to_string(),
-            JsLiteral::Float { float } => float.to_string(),
+            JsLiteral::Integer { value } => value.to_string(),
+            JsLiteral::Float { value } => value.to_string(),
             // fix: escape sequence
-            JsLiteral::Character { character } => format!("'{}'", character),
-            JsLiteral::String { string } => format!("\"{}\"", string),
+            JsLiteral::Character { value } => format!("'{}'", value),
+            JsLiteral::String { value } => format!("\"{}\"", value),
             JsLiteral::Object { exprs } => format!("{{{}}}", stringify_vec!(exprs, ",")),
         }
     }
