@@ -46,7 +46,7 @@ impl<'a> CsCompilerGenerator<'a> {
 }
 
 speculate!{
-    it "compile module into ES module" {
+    test "compile module into ES module" {
         let compiler = CsCompilerGenerator::new("mod Module\nend");
 
         assert_eq!(compiler.compile(), (
@@ -55,7 +55,7 @@ speculate!{
         ));
     }
 
-    it "compile module into CommonJS module" {
+    test "compile module into CommonJS module" {
         let compiler = CsCompilerGenerator::new("mod Module\nend")
             .apply_js_options(JsGeneratorOptions {
                 minify: true,
