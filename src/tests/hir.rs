@@ -36,7 +36,192 @@ speculate!{
                         items: vec![],
                     }),
                 ],
-            }
+            },
+        );
+    }
+
+    it "hirize public function" {
+        let mut generator = HirGenerator::new(&default_hir_options);
+
+        assert_eq!(
+            generator.function(
+                &SyntaxElementGenerator::function(
+                    SyntaxElementGenerator::visibility("pub"),
+                    SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                    SyntaxElementGenerator::function_argument_group(vec![]),
+                    None,
+                    vec![],
+                ).into_node(),
+            ).unwrap(),
+            HirFunction {
+                id: "main".to_string(),
+                visibility: HirVisibility::Public,
+                args: Vec::new(),
+                return_type: None,
+                exprs: Vec::new(),
+            },
+        );
+    }
+
+    it "hirize private function" {
+        let mut generator = HirGenerator::new(&default_hir_options);
+
+        assert_eq!(
+            generator.function(
+                &SyntaxElementGenerator::function(
+                    SyntaxElementGenerator::visibility("private"),
+                    SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                    SyntaxElementGenerator::function_argument_group(vec![]),
+                    None,
+                    vec![],
+                ).into_node(),
+            ).unwrap(),
+            HirFunction {
+                id: "main".to_string(),
+                visibility: HirVisibility::Private,
+                args: Vec::new(),
+                return_type: None,
+                exprs: Vec::new(),
+            },
+        );
+    }
+
+    it "hirize function with return type" {
+        let mut generator = HirGenerator::new(&default_hir_options);
+
+        let return_type_annotation = SyntaxElementGenerator::data_type_annotation(
+            SyntaxElementGenerator::data_type(
+                SyntaxElementGenerator::primitive_data_type("s32"),
+            ),
+        );
+
+        assert_eq!(
+            generator.function(
+                &SyntaxElementGenerator::function(
+                    SyntaxElementGenerator::visibility("pub"),
+                    SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                    SyntaxElementGenerator::function_argument_group(vec![]),
+                    Some(return_type_annotation),
+                    vec![],
+                ).into_node(),
+            ).unwrap(),
+            HirFunction {
+                id: "main".to_string(),
+                visibility: HirVisibility::Public,
+                args: Vec::new(),
+                return_type: Some(HirDataType::Primitive(HirPrimitiveDataType::S32)),
+                exprs: Vec::new(),
+            },
+        );
+    }
+
+    it "hirize function with arguments" {
+        let mut generator = HirGenerator::new(&default_hir_options);
+
+        assert_eq!(
+            generator.function(
+                &SyntaxElementGenerator::function(
+                    SyntaxElementGenerator::visibility("pub"),
+                    SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                    SyntaxElementGenerator::function_argument_group(
+                        vec![
+                            SyntaxElementGenerator::function_argument(
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg1"),
+                                SyntaxElementGenerator::data_type_annotation(
+                                    SyntaxElementGenerator::data_type(
+                                        SyntaxElementGenerator::primitive_data_type("s32"),
+                                    ),
+                                ),
+                            ),
+                            SyntaxElementGenerator::function_argument(
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg2"),
+                                SyntaxElementGenerator::data_type_annotation(
+                                    SyntaxElementGenerator::data_type(
+                                        SyntaxElementGenerator::primitive_data_type("s32"),
+                                    ),
+                                ),
+                            ),
+                        ],
+                    ),
+                    None,
+                    vec![],
+                ).into_node(),
+            ).unwrap(),
+            HirFunction {
+                id: "main".to_string(),
+                visibility: HirVisibility::Public,
+                args: vec![
+                    HirFunctionFormalArgument {
+                        id: "arg1".to_string(),
+                        data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
+                    },
+                    HirFunctionFormalArgument {
+                        id: "arg2".to_string(),
+                        data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
+                    },
+                ],
+                return_type: None,
+                exprs: Vec::new(),
+            },
+        );
+    }
+
+    it "hirize function with expression" {
+        let mut generator = HirGenerator::new(&default_hir_options);
+
+        assert_eq!(
+            generator.function(
+                &SyntaxElementGenerator::function(
+                    SyntaxElementGenerator::visibility("pub"),
+                    SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                    SyntaxElementGenerator::function_argument_group(vec![]),
+                    None,
+                    vec![
+                        SyntaxElementGenerator::expression(
+                            SyntaxElementGenerator::boolean_literal("true"),
+                        ),
+                    ],
+                ).into_node(),
+            ).unwrap(),
+            HirFunction {
+                id: "main".to_string(),
+                visibility: HirVisibility::Public,
+                args: Vec::new(),
+                return_type: None,
+                exprs: vec![HirExpression::Literal(HirLiteral::Boolean { value: "true".to_string() })],
+            },
+        );
+    }
+
+    it "hirize formal argument" {
+        let mut generator = HirGenerator::new(&default_hir_options);
+
+        assert_eq!(
+            generator.formal_argument(
+                &SyntaxElementGenerator::function_argument(
+                    SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg"),
+                    SyntaxElementGenerator::data_type_annotation(
+                        SyntaxElementGenerator::data_type(
+                            SyntaxElementGenerator::primitive_data_type("s32"),
+                        ),
+                    ),
+                ).into_node(),
+            ),
+            HirFunctionFormalArgument {
+                id: "arg".to_string(),
+                data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
+            },
+        );
+    }
+
+    it "hirize item visibility" {
+        let mut generator = HirGenerator::new(&default_hir_options);
+
+        assert_eq!(
+            generator.visibility(
+                &SyntaxElementGenerator::visibility("private").into_node(),
+            ),
+            HirVisibility::Private,
         );
     }
 
@@ -208,6 +393,21 @@ speculate!{
                 ).into_node(),
             ),
             Some(HirExpression::Literal(HirLiteral::String { string: "a\n\0".to_string() })),
+        );
+    }
+
+    it "hirize data type annotation" {
+        let mut generator = HirGenerator::new(&default_hir_options);
+
+        assert_eq!(
+            generator.data_type_annotation(
+                &SyntaxElementGenerator::data_type_annotation(
+                    SyntaxElementGenerator::data_type(
+                        SyntaxElementGenerator::primitive_data_type("bool"),
+                    ),
+                ).into_node(),
+            ),
+            HirDataType::Primitive(HirPrimitiveDataType::Boolean),
         );
     }
 }

@@ -58,6 +58,7 @@ impl<'a> HirGenerator<'a> {
     pub fn module(&mut self, node: &SyntaxNode) -> HirGeneratorResult<HirModule> {
         let id_node  = node.search_node("Identifier::identifier").unwrap();
         let id = self.identifier(id_node, HirIdentifierKind::PascalCase);
+        // fix, test
         let visibility = HirVisibility::Private;
         let mut items = Vec::new();
 
@@ -72,6 +73,56 @@ impl<'a> HirGenerator<'a> {
         };
 
         Ok(module)
+    }
+
+    pub fn function(&mut self, node: &SyntaxNode) -> HirGeneratorResult<HirFunction> {
+        let id_node  = node.search_node("Identifier::identifier").unwrap();
+        let id = self.identifier(id_node, HirIdentifierKind::SnakeCase);
+        let visibility = self.visibility(node.search_node("Item::visibility").unwrap());
+        let arg_group = node.search_node("Item::function_argument_group").unwrap();
+        let args = arg_group.children.iter().map(|v| self.formal_argument(v.into_node())).collect();
+
+        let return_type = match node.search_node("DataType::annotation") {
+            Some(v) => Some(self.data_type_annotation(v)),
+            None => None,
+        };
+
+        let mut exprs = Vec::new();
+
+        for each_expr_node in &node.search_node("expressions").unwrap().children {
+            if let Some(v) = self.expression(each_expr_node.into_node()) {
+                exprs.push(v);
+            }
+        }
+
+        let function = HirFunction {
+            id: id,
+            visibility: visibility,
+            args: args,
+            return_type: return_type,
+            exprs: exprs,
+        };
+
+        Ok(function)
+    }
+
+    pub fn formal_argument(&mut self, node: &SyntaxNode) -> HirFunctionFormalArgument {
+        let id_node  = node.search_node("Identifier::identifier").unwrap();
+        let id = self.identifier(id_node, HirIdentifierKind::PascalCase);
+        let data_type = self.data_type_annotation(node.search_node("DataType::annotation").unwrap());
+
+        HirFunctionFormalArgument {
+            id: id,
+            data_type: data_type,
+        }
+    }
+
+    pub fn visibility(&mut self, node: &SyntaxNode) -> HirVisibility {
+        match node.child_leaf_at(0).value.as_str() {
+            "pub" => HirVisibility::Public,
+            "private" => HirVisibility::Private,
+            _ => unreachable!(),
+        }
     }
 
     pub fn identifier(&mut self, node: &SyntaxNode, valid_identifier_kind: HirIdentifierKind) -> String {
@@ -117,6 +168,10 @@ impl<'a> HirGenerator<'a> {
             },
             _ => unreachable!(),
         }
+    }
+
+    pub fn data_type_annotation(&mut self, node: &SyntaxNode) -> HirDataType {
+        self.data_type(node.search_node("DataType::data_type").unwrap())
     }
 
     pub fn literal(&mut self, node: &SyntaxNode) -> Option<HirLiteral> {
@@ -246,6 +301,7 @@ pub enum HirVisibility {
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirItem {
     Module(HirModule),
+    Function(HirFunction),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -253,6 +309,21 @@ pub struct HirModule {
     pub id: String,
     pub visibility: HirVisibility,
     pub items: Vec<HirItem>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct HirFunction {
+    pub id: String,
+    pub visibility: HirVisibility,
+    pub args: Vec<HirFunctionFormalArgument>,
+    pub return_type: Option<HirDataType>,
+    pub exprs: Vec<HirExpression>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct HirFunctionFormalArgument {
+    pub id: String,
+    pub data_type: HirDataType,
 }
 
 #[derive(Clone, Debug, PartialEq)]

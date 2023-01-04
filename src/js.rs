@@ -63,6 +63,7 @@ impl<'a> JsGenerator<'a> {
     pub fn item(&mut self, item: &'a HirItem) -> JsStatement {
         match item {
             HirItem::Module(module) => self.module(module),
+            HirItem::Function(function) => self.function(function),
         }
     }
 
@@ -76,6 +77,10 @@ impl<'a> JsGenerator<'a> {
         let es_export = self.options.module_style == JsModuleStyle::Es2015;
         let stmts = module.items.iter().map(|v| self.item(v)).collect();
         JsStatement::NamespaceDefinition { es_export: es_export, id: module.id.clone(), statements: stmts }
+    }
+
+    pub fn function(&mut self, function: &'a HirFunction) -> JsStatement {
+        unimplemented!()
     }
 }
 
