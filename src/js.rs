@@ -87,11 +87,7 @@ impl<'a> JsGenerator<'a> {
         let mut stmts: Vec<JsStatement> = function.exprs[0..function.exprs.len() - 1].iter().map(|v| self.expression(v)).collect();
 
         if let Some(v) = function.exprs.last() {
-            let return_expr = match self.expression(v) {
-                JsStatement::Expression(expr) => expr,
-                _ => unreachable!(),
-            };
-
+            let return_expr = self.expression(v).into_expression();
             let last_stmt = JsStatement::ReturnValue { expr: return_expr };
             stmts.push(last_stmt);
         }
@@ -108,8 +104,7 @@ impl<'a> JsGenerator<'a> {
             HirExpression::Literal(literal) => {
                 let js_literal = match literal {
                     HirLiteral::Boolean { value } => JsLiteral::Boolean { value: *value },
-                    // fix: use base
-                    HirLiteral::Integer { base, value, data_type } => JsLiteral::Integer { value: *value },
+                    HirLiteral::Integer { base, value, data_type } => JsLiteral::Integer { base: base.into(), value: *value },
                     HirLiteral::Float { value, data_type } => JsLiteral::Float { value: *value },
                     HirLiteral::Character { value } => JsLiteral::Character { value: *value },
                     HirLiteral::String { value } => JsLiteral::String { value: value.clone() },
@@ -165,6 +160,15 @@ pub enum JsStatement {
     ReturnValue { expr: JsExpression },
 }
 
+impl JsStatement {
+    pub fn into_expression(self) -> JsExpression {
+        match self {
+            JsStatement::Expression(expr) => expr,
+            _ => panic!("Cannot convert statement into expression."),
+        }
+    }
+}
+
 impl JsStringifier for JsStatement {
     fn stringify(&self) -> String {
         match self {
@@ -210,8 +214,7 @@ impl JsStringifier for JsExpression {
 #[derive(Clone, Debug, PartialEq)]
 pub enum JsLiteral {
     Boolean { value: bool },
-    // fix: add base
-    Integer { value: u64 },
+    Integer { base: JsIntegerBase, value: u64 },
     Float { value: f64 },
     Character { value: char },
     String { value: String },
@@ -222,12 +225,36 @@ impl JsStringifier for JsLiteral {
     fn stringify(&self) -> String {
         match self {
             JsLiteral::Boolean { value } => value.to_string(),
-            JsLiteral::Integer { value } => value.to_string(),
+            JsLiteral::Integer { base, value } => match base {
+                JsIntegerBase::Binary => format!("0b{:b}", value),
+                JsIntegerBase::Octal => format!("0o{:o}", value),
+                JsIntegerBase::Decimal => format!("{}", value),
+                JsIntegerBase::Hexadecimal => format!("0x{:x}", value),
+            },
             JsLiteral::Float { value } => value.to_string(),
             // fix: escape sequence
             JsLiteral::Character { value } => format!("'{}'", value),
             JsLiteral::String { value } => format!("\"{}\"", value),
             JsLiteral::Object { exprs } => format!("{{{}}}", stringify_vec!(exprs, ",")),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum JsIntegerBase {
+    Binary,
+    Octal,
+    Decimal,
+    Hexadecimal,
+}
+
+impl From<&HirIntegerBase> for JsIntegerBase {
+    fn from(v: &HirIntegerBase) -> Self {
+        match v {
+            HirIntegerBase::Binary => JsIntegerBase::Binary,
+            HirIntegerBase::Octal => JsIntegerBase::Octal,
+            HirIntegerBase::Decimal => JsIntegerBase::Decimal,
+            HirIntegerBase::Hexadecimal => JsIntegerBase::Hexadecimal,
         }
     }
 }

@@ -92,5 +92,79 @@ speculate!{
                 );
             }
         }
+
+    }
+
+    describe "jsify expression" {
+        describe "jsify expression > literal" {
+            describe "jsify expression > literal > boolean" {
+                test "is true" {
+                    let mut generator = JsGenerator::new(default_js_options);
+
+                    assert_eq!(
+                        generator.expression(
+                            &HirExpression::Literal(
+                                HirLiteral::Boolean { value: true },
+                            ),
+                        ).into_expression().stringify(),
+                        "true".to_string(),
+                    );
+                }
+            }
+
+            describe "jsify expression > literal > integer" {
+                test "is binary format" {
+                    let mut generator = JsGenerator::new(default_js_options);
+
+                    assert_eq!(
+                        generator.expression(
+                            &HirExpression::Literal(
+                                HirLiteral::Integer { base: HirIntegerBase::Binary, value: 255, data_type: None },
+                            ),
+                        ).into_expression().stringify(),
+                        "0b11111111".to_string(),
+                    );
+                }
+
+                test "is octal format" {
+                    let mut generator = JsGenerator::new(default_js_options);
+
+                    assert_eq!(
+                        generator.expression(
+                            &HirExpression::Literal(
+                                HirLiteral::Integer { base: HirIntegerBase::Octal, value: 255, data_type: None },
+                            ),
+                        ).into_expression().stringify(),
+                        "0o377".to_string(),
+                    );
+                }
+
+                test "is decimal format" {
+                    let mut generator = JsGenerator::new(default_js_options);
+
+                    assert_eq!(
+                        generator.expression(
+                            &HirExpression::Literal(
+                                HirLiteral::Integer { base: HirIntegerBase::Decimal, value: 255, data_type: None },
+                            ),
+                        ).into_expression().stringify(),
+                        "255".to_string(),
+                    );
+                }
+
+                test "is hexadecimal format" {
+                    let mut generator = JsGenerator::new(default_js_options);
+
+                    assert_eq!(
+                        generator.expression(
+                            &HirExpression::Literal(
+                                HirLiteral::Integer { base: HirIntegerBase::Hexadecimal, value: 255, data_type: None },
+                            ),
+                        ).into_expression().stringify(),
+                        "0xff".to_string(),
+                    );
+                }
+            }
+        }
     }
 }

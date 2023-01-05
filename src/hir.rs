@@ -184,10 +184,10 @@ impl<'a> HirGenerator<'a> {
             "Literal::integer" => {
                 let based_integer_node = child_node.child_node_at(0);
                 let base = match based_integer_node.name.as_str() {
-                    "bin" => HirNumberBase::Binary,
-                    "dec" => HirNumberBase::Decimal,
-                    "oct" => HirNumberBase::Octal,
-                    "hex" => HirNumberBase::Hexadecimal,
+                    "bin" => HirIntegerBase::Binary,
+                    "dec" => HirIntegerBase::Decimal,
+                    "oct" => HirIntegerBase::Octal,
+                    "hex" => HirIntegerBase::Hexadecimal,
                     _ => unreachable!(),
                 };
 
@@ -352,20 +352,20 @@ pub enum HirExpression {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum HirNumberBase {
+pub enum HirIntegerBase {
     Binary,
     Octal,
     Decimal,
     Hexadecimal,
 }
 
-impl HirNumberBase {
+impl HirIntegerBase {
     pub fn to_radix(&self) -> u32 {
         match self {
-            HirNumberBase::Binary => 2,
-            HirNumberBase::Octal => 8,
-            HirNumberBase::Decimal => 10,
-            HirNumberBase::Hexadecimal => 16,
+            HirIntegerBase::Binary => 2,
+            HirIntegerBase::Octal => 8,
+            HirIntegerBase::Decimal => 10,
+            HirIntegerBase::Hexadecimal => 16,
         }
     }
 }
@@ -373,7 +373,7 @@ impl HirNumberBase {
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirLiteral {
     Boolean { value: bool },
-    Integer { base: HirNumberBase, value: u64, data_type: Option<HirDataType> },
+    Integer { base: HirIntegerBase, value: u64, data_type: Option<HirDataType> },
     Float { value: f64, data_type: Option<HirDataType> },
     Character { value: char },
     String { value: String },

@@ -335,7 +335,7 @@ speculate!{
                         Some(
                             HirExpression::Literal(
                                 HirLiteral::Integer {
-                                    base: HirNumberBase::Decimal,
+                                    base: HirIntegerBase::Decimal,
                                     value: 12,
                                     data_type: None,
                                 },
@@ -356,7 +356,7 @@ speculate!{
                         Some(
                             HirExpression::Literal(
                                 HirLiteral::Integer {
-                                    base: HirNumberBase::Decimal,
+                                    base: HirIntegerBase::Decimal,
                                     value: 12,
                                     data_type: Some(HirDataType::Primitive(HirPrimitiveDataType::S32)),
                                 },
