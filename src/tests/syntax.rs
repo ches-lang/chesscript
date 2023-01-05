@@ -63,6 +63,182 @@ speculate!{
         }
     }
 
+    describe "parse item" {
+        describe "module item" {
+            test "has private visibility" {
+                expect_success("mod Module\nend", "Item::module", tree!{
+                    SyntaxElementGenerator::module(
+                        "private",
+                        SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
+                        vec![],
+                    )
+                });
+            }
+
+            test "has public visibility" {
+                expect_success("pub mod Module\nend", "Item::module", tree!{
+                    SyntaxElementGenerator::module(
+                        "pub",
+                        SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
+                        vec![],
+                    )
+                });
+            }
+
+            test "has an child item" {
+                expect_success("mod Module\nmod SubModule\nend\nend", "Item::module", tree!{
+                    SyntaxElementGenerator::module(
+                        "private",
+                        SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
+                        vec![
+                            SyntaxElementGenerator::item(
+                                SyntaxElementGenerator::module(
+                                    "private",
+                                    SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "SubModule"),
+                                    vec![],
+                                ),
+                            ),
+                        ],
+                    )
+                });
+            }
+        }
+
+        describe "parse item > function" {
+            test "has public visibility" {
+                expect_success("pub fn main()\nend", "Item::function", tree!{
+                    SyntaxElementGenerator::function_definition(
+                        SyntaxElementGenerator::visibility("pub"),
+                        SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                        SyntaxElementGenerator::formal_function_argument_group(vec![]),
+                        None,
+                        vec![],
+                    )
+                });
+            }
+
+            test "has return type" {
+                let return_type_annotation = SyntaxElementGenerator::data_type_annotation(
+                    SyntaxElementGenerator::data_type(
+                        SyntaxElementGenerator::primitive_data_type("s32"),
+                    ),
+                );
+
+                expect_success("pub fn main(): s32\nend", "Item::function", tree!{
+                    SyntaxElementGenerator::function_definition(
+                        SyntaxElementGenerator::visibility("pub"),
+                        SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                        SyntaxElementGenerator::formal_function_argument_group(vec![]),
+                        Some(return_type_annotation),
+                        vec![],
+                    )
+                });
+            }
+
+            test "has expression" {
+                expect_success("pub fn main()\ntrue\nend", "Item::function", tree!{
+                    SyntaxElementGenerator::function_definition(
+                        SyntaxElementGenerator::visibility("pub"),
+                        SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                        SyntaxElementGenerator::formal_function_argument_group(vec![]),
+                        None,
+                        vec![
+                            SyntaxElementGenerator::expression(
+                                SyntaxElementGenerator::boolean_literal("true"),
+                            ),
+                        ],
+                    )
+                });
+            }
+
+            describe "parse item > function > argument" {
+                test "has no argument" {
+                    expect_success("()", "Item::function_argument_group", tree!{
+                        SyntaxElementGenerator::formal_function_argument_group(vec![])
+                    });
+                }
+
+                test "has three arguments" {
+                    expect_success("(arg1: s32, arg2: s32, arg3: s32)", "Item::function_argument_group", tree!{
+                        SyntaxElementGenerator::formal_function_argument_group(vec![
+                            SyntaxElementGenerator::formal_function_argument(
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg1"),
+                                SyntaxElementGenerator::data_type_annotation(
+                                    SyntaxElementGenerator::data_type(
+                                        SyntaxElementGenerator::primitive_data_type("s32"),
+                                    ),
+                                ),
+                            ),
+                            SyntaxElementGenerator::formal_function_argument(
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg2"),
+                                SyntaxElementGenerator::data_type_annotation(
+                                    SyntaxElementGenerator::data_type(
+                                        SyntaxElementGenerator::primitive_data_type("s32"),
+                                    ),
+                                ),
+                            ),
+                            SyntaxElementGenerator::formal_function_argument(
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg3"),
+                                SyntaxElementGenerator::data_type_annotation(
+                                    SyntaxElementGenerator::data_type(
+                                        SyntaxElementGenerator::primitive_data_type("s32"),
+                                    ),
+                                ),
+                            ),
+                        ])
+                    });
+                }
+
+                test "parse function argument" {
+                    expect_success("arg: s32", "Item::function_argument", tree!{
+                        SyntaxElementGenerator::formal_function_argument(
+                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg"),
+                            SyntaxElementGenerator::data_type_annotation(
+                                SyntaxElementGenerator::data_type(
+                                    SyntaxElementGenerator::primitive_data_type("s32"),
+                                ),
+                            ),
+                        )
+                    });
+                }
+            }
+        }
+
+        describe "parse item > visibility" {
+            test "has public visibility" {
+                expect_success("pub", "Item::visibility", tree!{
+                    SyntaxElementGenerator::visibility("pub")
+                });
+            }
+
+            test "parse private visibility" {
+                expect_success("", "Item::visibility", tree!{
+                    SyntaxElementGenerator::visibility("private")
+                });
+            }
+        }
+
+        describe "parse data type" {
+            test "has the primitive type" {
+                expect_success("s32", "DataType::data_type", tree!{
+                    SyntaxElementGenerator::data_type(
+                        SyntaxElementGenerator::primitive_data_type("s32"),
+                    )
+                });
+            }
+
+            test "has specified type in annotation" {
+                expect_success(": s32", "DataType::annotation", tree!{
+                    SyntaxElementGenerator::data_type_annotation(
+                        SyntaxElementGenerator::data_type(
+                            SyntaxElementGenerator::primitive_data_type("s32"),
+                        ),
+                    )
+                });
+            }
+        }
+    }
+    
     describe "parse expression" {
         describe "parse expression > data type" {
             test "has the name of primitive data type" {
@@ -268,180 +444,55 @@ speculate!{
                 }
             }
         }
-    }
 
-    describe "parse item" {
-        describe "module item" {
-            test "has private visibility" {
-                expect_success("mod Module\nend", "Item::module", tree!{
-                    SyntaxElementGenerator::module(
-                        "private",
-                        SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
-                        vec![],
+        describe "parse expression > function call" {
+            test "has function name and argument group" {
+                expect_success("f()", "Function::call", tree!{
+                    SyntaxElementGenerator::function_call(
+                        SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "f"),
+                        SyntaxElementGenerator::actual_argument_group(vec![]),
                     )
                 });
             }
 
-            test "has public visibility" {
-                expect_success("pub mod Module\nend", "Item::module", tree!{
-                    SyntaxElementGenerator::module(
-                        "pub",
-                        SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
-                        vec![],
-                    )
-                });
-            }
-
-            test "has an child item" {
-                expect_success("mod Module\nmod SubModule\nend\nend", "Item::module", tree!{
-                    SyntaxElementGenerator::module(
-                        "private",
-                        SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
-                        vec![
-                            SyntaxElementGenerator::item(
-                                SyntaxElementGenerator::module(
-                                    "private",
-                                    SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "SubModule"),
-                                    vec![],
-                                ),
-                            ),
-                        ],
-                    )
-                });
-            }
-        }
-
-        describe "parse item > function" {
-            test "has public visibility" {
-                expect_success("pub fn main()\nend", "Item::function", tree!{
-                    SyntaxElementGenerator::function(
-                        SyntaxElementGenerator::visibility("pub"),
-                        SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                        SyntaxElementGenerator::function_argument_group(vec![]),
-                        None,
-                        vec![],
-                    )
-                });
-            }
-
-            test "has return type" {
-                let return_type_annotation = SyntaxElementGenerator::data_type_annotation(
-                    SyntaxElementGenerator::data_type(
-                        SyntaxElementGenerator::primitive_data_type("s32"),
-                    ),
-                );
-
-                expect_success("pub fn main(): s32\nend", "Item::function", tree!{
-                    SyntaxElementGenerator::function(
-                        SyntaxElementGenerator::visibility("pub"),
-                        SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                        SyntaxElementGenerator::function_argument_group(vec![]),
-                        Some(return_type_annotation),
-                        vec![],
-                    )
-                });
-            }
-
-            test "has expression" {
-                expect_success("pub fn main()\ntrue\nend", "Item::function", tree!{
-                    SyntaxElementGenerator::function(
-                        SyntaxElementGenerator::visibility("pub"),
-                        SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                        SyntaxElementGenerator::function_argument_group(vec![]),
-                        None,
-                        vec![
-                            SyntaxElementGenerator::expression(
-                                SyntaxElementGenerator::boolean_literal("true"),
-                            ),
-                        ],
-                    )
-                });
-            }
-
-            describe "parse item > function > argument" {
+            describe "parse expression > function call > argument" {
                 test "has no argument" {
-                    expect_success("()", "Item::function_argument_group", tree!{
-                        SyntaxElementGenerator::function_argument_group(vec![])
+                    expect_success("f()", "Function::call", tree!{
+                        SyntaxElementGenerator::function_call(
+                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "f"),
+                            SyntaxElementGenerator::actual_argument_group(vec![]),
+                        )
                     });
                 }
 
-                test "has multiple arguments" {
-                    expect_success("(arg1: s32, arg2: s32, arg3: s32)", "Item::function_argument_group", tree!{
-                        SyntaxElementGenerator::function_argument_group(vec![
-                            SyntaxElementGenerator::function_argument(
-                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg1"),
-                                SyntaxElementGenerator::data_type_annotation(
-                                    SyntaxElementGenerator::data_type(
-                                        SyntaxElementGenerator::primitive_data_type("s32"),
+                test "has three arguments" {
+                    expect_success("f(true, 0, ' ')", "Function::call", tree!{
+                        SyntaxElementGenerator::function_call(
+                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "f"),
+                            SyntaxElementGenerator::actual_argument_group(
+                                vec![
+                                    SyntaxElementGenerator::actual_argument(
+                                        SyntaxElementGenerator::expression(
+                                            SyntaxElementGenerator::boolean_literal("true"),
+                                        ),
                                     ),
-                                ),
-                            ),
-                            SyntaxElementGenerator::function_argument(
-                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg2"),
-                                SyntaxElementGenerator::data_type_annotation(
-                                    SyntaxElementGenerator::data_type(
-                                        SyntaxElementGenerator::primitive_data_type("s32"),
+                                    SyntaxElementGenerator::actual_argument(
+                                        SyntaxElementGenerator::expression(
+                                            SyntaxElementGenerator::integer_literal("dec", "0", None),
+                                        ),
                                     ),
-                                ),
-                            ),
-                            SyntaxElementGenerator::function_argument(
-                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg3"),
-                                SyntaxElementGenerator::data_type_annotation(
-                                    SyntaxElementGenerator::data_type(
-                                        SyntaxElementGenerator::primitive_data_type("s32"),
+                                    SyntaxElementGenerator::actual_argument(
+                                        SyntaxElementGenerator::expression(
+                                            SyntaxElementGenerator::character_literal(
+                                                SyntaxElementGenerator::single_character(leaf!(" ")),
+                                            ),
+                                        ),
                                     ),
-                                ),
-                            ),
-                        ])
-                    });
-                }
-
-                test "parse function argument" {
-                    expect_success("arg: s32", "Item::function_argument", tree!{
-                        SyntaxElementGenerator::function_argument(
-                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg"),
-                            SyntaxElementGenerator::data_type_annotation(
-                                SyntaxElementGenerator::data_type(
-                                    SyntaxElementGenerator::primitive_data_type("s32"),
-                                ),
+                                ],
                             ),
                         )
                     });
                 }
-            }
-        }
-
-        describe "parse item > visibility" {
-            test "has public visibility" {
-                expect_success("pub", "Item::visibility", tree!{
-                    SyntaxElementGenerator::visibility("pub")
-                });
-            }
-
-            test "parse private visibility" {
-                expect_success("", "Item::visibility", tree!{
-                    SyntaxElementGenerator::visibility("private")
-                });
-            }
-        }
-
-        describe "parse data type" {
-            test "has the primitive type" {
-                expect_success("s32", "DataType::data_type", tree!{
-                    SyntaxElementGenerator::data_type(
-                        SyntaxElementGenerator::primitive_data_type("s32"),
-                    )
-                });
-            }
-
-            test "has specified type in annotation" {
-                expect_success(": s32", "DataType::annotation", tree!{
-                    SyntaxElementGenerator::data_type_annotation(
-                        SyntaxElementGenerator::data_type(
-                            SyntaxElementGenerator::primitive_data_type("s32"),
-                        ),
-                    )
-                });
             }
         }
     }

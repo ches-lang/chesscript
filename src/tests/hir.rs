@@ -87,10 +87,10 @@ speculate!{
 
                 assert_eq!(
                     generator.function(
-                        &SyntaxElementGenerator::function(
+                        &SyntaxElementGenerator::function_definition(
                             SyntaxElementGenerator::visibility("pub"),
                             SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                            SyntaxElementGenerator::function_argument_group(vec![]),
+                            SyntaxElementGenerator::formal_function_argument_group(vec![]),
                             None,
                             vec![],
                         ).into_node(),
@@ -110,10 +110,10 @@ speculate!{
 
                 assert_eq!(
                     generator.function(
-                        &SyntaxElementGenerator::function(
+                        &SyntaxElementGenerator::function_definition(
                             SyntaxElementGenerator::visibility("private"),
                             SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                            SyntaxElementGenerator::function_argument_group(vec![]),
+                            SyntaxElementGenerator::formal_function_argument_group(vec![]),
                             None,
                             vec![],
                         ).into_node(),
@@ -139,10 +139,10 @@ speculate!{
 
                 assert_eq!(
                     generator.function(
-                        &SyntaxElementGenerator::function(
+                        &SyntaxElementGenerator::function_definition(
                             SyntaxElementGenerator::visibility("pub"),
                             SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                            SyntaxElementGenerator::function_argument_group(vec![]),
+                            SyntaxElementGenerator::formal_function_argument_group(vec![]),
                             Some(return_type_annotation),
                             vec![],
                         ).into_node(),
@@ -162,12 +162,12 @@ speculate!{
 
                 assert_eq!(
                     generator.function(
-                        &SyntaxElementGenerator::function(
+                        &SyntaxElementGenerator::function_definition(
                             SyntaxElementGenerator::visibility("pub"),
                             SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                            SyntaxElementGenerator::function_argument_group(
+                            SyntaxElementGenerator::formal_function_argument_group(
                                 vec![
-                                    SyntaxElementGenerator::function_argument(
+                                    SyntaxElementGenerator::formal_function_argument(
                                         SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg1"),
                                         SyntaxElementGenerator::data_type_annotation(
                                             SyntaxElementGenerator::data_type(
@@ -175,7 +175,7 @@ speculate!{
                                             ),
                                         ),
                                     ),
-                                    SyntaxElementGenerator::function_argument(
+                                    SyntaxElementGenerator::formal_function_argument(
                                         SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg2"),
                                         SyntaxElementGenerator::data_type_annotation(
                                             SyntaxElementGenerator::data_type(
@@ -213,10 +213,10 @@ speculate!{
 
                 assert_eq!(
                     generator.function(
-                        &SyntaxElementGenerator::function(
+                        &SyntaxElementGenerator::function_definition(
                             SyntaxElementGenerator::visibility("pub"),
                             SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                            SyntaxElementGenerator::function_argument_group(vec![]),
+                            SyntaxElementGenerator::formal_function_argument_group(vec![]),
                             None,
                             vec![
                                 SyntaxElementGenerator::expression(
@@ -241,7 +241,7 @@ speculate!{
 
                     assert_eq!(
                         generator.formal_argument(
-                            &SyntaxElementGenerator::function_argument(
+                            &SyntaxElementGenerator::formal_function_argument(
                                 SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg"),
                                 SyntaxElementGenerator::data_type_annotation(
                                     SyntaxElementGenerator::data_type(

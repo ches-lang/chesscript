@@ -2,6 +2,9 @@ use std::rc::Rc;
 use cake::{*, tree::*};
 use cake_derive::RuleContainer;
 
+const WHITESPACE: fn(usize) -> Element = |min: usize| !Symbol::whitespace().min(min);
+const NEWLINES: fn() -> Element = || !Symbol::newline().one_or_more();
+
 /* Main */
 
 #[derive(RuleContainer)]
@@ -45,6 +48,7 @@ pub struct Item {
     item: Element,
     module: Element,
     function: Element,
+    // fix: rename to formal_argument_group
     function_argument_group: Element,
     function_argument: Element,
     visibility: Element,
@@ -52,9 +56,6 @@ pub struct Item {
 
 impl Module for Item {
     fn new() -> Self {
-        let whitespace = |min: usize| !Symbol::whitespace().min(min);
-        let newlines = || !Symbol::newline().one_or_more();
-
         let run_visibility: ElementCallback = |option | if let Some(children) = option {
             Some(children)
         } else {
@@ -63,20 +64,23 @@ impl Module for Item {
 
         add_rules!{
             item := Item::module();
-            module := g!{Item::visibility() + whitespace(0)}.optional() + !str("mod") + whitespace(1) + Identifier::identifier() + newlines() +
-                g!{g!{Item::item() + newlines()}.zero_or_more()}.name("items") +
+            module := g!{Item::visibility() + WHITESPACE(0)}.optional() + !str("mod") + WHITESPACE(1) + Identifier::identifier() + NEWLINES() +
+                g!{g!{Item::item() + NEWLINES()}.zero_or_more()}.name("items") +
                 !str("end");
-            function := g!{Item::visibility() + whitespace(0)}.optional() + !str("fn") + whitespace(1) + Identifier::identifier() + whitespace(0) +
-                Item::function_argument_group() + whitespace(0) +
-                DataType::annotation().optional() + newlines() +
-                g!{g!{Expression::expression() + newlines()}.zero_or_more()}.name("expressions") +
+            function := g!{Item::visibility() + WHITESPACE(0)}.optional() + !str("fn") + WHITESPACE(1) + Identifier::identifier() + WHITESPACE(0) +
+                Item::function_argument_group() + WHITESPACE(0) +
+                DataType::annotation().optional() + NEWLINES() +
+                g!{g!{Expression::expression() + NEWLINES()}.zero_or_more()}.name("expressions") +
                 !str("end");
-            function_argument_group := !str("(") + whitespace(0) +
+            function_argument_group :=
+                !str("(") +
+                WHITESPACE(0) +
                 g!{
-                    Item::function_argument() + g!{whitespace(0) + !str(",") + whitespace(0) + Item::function_argument()}.zero_or_more()
-                }.optional() + whitespace(0) +
+                    Item::function_argument() + g!{WHITESPACE(0) + !str(",") + WHITESPACE(0) + Item::function_argument()}.zero_or_more()
+                }.optional() +
+                WHITESPACE(0) +
                 !str(")");
-            function_argument := Identifier::identifier() + whitespace(0) + DataType::annotation();
+            function_argument := Identifier::identifier() + WHITESPACE(0) + DataType::annotation();
             visibility := str("pub").optional().run(run_visibility);
         }
     }
@@ -94,6 +98,7 @@ impl Module for Expression {
         add_rules!{
             expression :=
                 Literal::literal() |
+                Function::call() |
                 DataType::data_type();
         }
     }
@@ -235,6 +240,32 @@ impl Module for Literal {
                 "0", "n", "t", "\\",
             ]);
             unicode_escape_suffix := !str("u{") + regex("[0-9a-f]").min(1).max(6).group().join() + !str("}");
+        }
+    }
+}
+
+/* Function */
+
+#[derive(RuleContainer)]
+pub struct Function {
+    call: Element,
+    actual_argument_group: Element,
+    actual_argument: Element,
+}
+
+impl Module for Function {
+    fn new() -> Self {
+        add_rules!{
+            call := Identifier::identifier() + WHITESPACE(0) + Function::actual_argument_group();
+            actual_argument_group :=
+                !str("(") +
+                WHITESPACE(0) +
+                g!{
+                    Function::actual_argument() + g!{WHITESPACE(0) + !str(",") + WHITESPACE(0) + Function::actual_argument()}.zero_or_more()
+                }.optional() +
+                WHITESPACE(0) +
+                !str(")");
+            actual_argument := Expression::expression();
         }
     }
 }

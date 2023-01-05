@@ -221,7 +221,7 @@ impl SyntaxElementGenerator {
         }
     }
 
-    pub fn function(
+    pub fn function_definition(
         visibility: SyntaxChild,
         id: SyntaxChild,
         arg_group: SyntaxChild,
@@ -254,13 +254,13 @@ impl SyntaxElementGenerator {
         }
     }
 
-    pub fn function_argument_group(args: Vec<SyntaxChild>) -> SyntaxChild {
+    pub fn formal_function_argument_group(args: Vec<SyntaxChild>) -> SyntaxChild {
         node!{
             "Item::function_argument_group" => args
         }
     }
 
-    pub fn function_argument(id: SyntaxChild, data_type_annotation: SyntaxChild) -> SyntaxChild {
+    pub fn formal_function_argument(id: SyntaxChild, data_type_annotation: SyntaxChild) -> SyntaxChild {
         node!{
             "Item::function_argument" => vec![
                 id,
@@ -273,6 +273,29 @@ impl SyntaxElementGenerator {
         node!{
             "Item::visibility" => vec![
                 leaf!(visibility),
+            ]
+        }
+    }
+
+    pub fn function_call(id: SyntaxChild, arg_group: SyntaxChild) -> SyntaxChild {
+        node!{
+            "Function::call" => vec![
+                id,
+                arg_group,
+            ]
+        }
+    }
+
+    pub fn actual_argument_group(args: Vec<SyntaxChild>) -> SyntaxChild {
+        node!{
+            "Function::actual_argument_group" => args
+        }
+    }
+
+    pub fn actual_argument(expr: SyntaxChild) -> SyntaxChild {
+        node!{
+            "Function::actual_argument" => vec![
+                expr,
             ]
         }
     }
