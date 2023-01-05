@@ -202,7 +202,10 @@ impl Module for Literal {
                 g!{
                     Literal::based_integer().expand() | number_chain(regex("[0-9]")).group().name("dec")
                 } +
-                DataType::integer().expand().name("data_type_suffix").optional();
+                g!{
+                    DataType::integer().expand() |
+                    DataType::float().expand()
+                }.name("data_type_suffix").optional();
             based_integer :=
                 g!{
                     !str("0b") + number_chain(regex("[0-1]"))

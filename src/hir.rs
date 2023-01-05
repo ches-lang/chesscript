@@ -373,7 +373,6 @@ impl HirNumberBase {
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirLiteral {
     Boolean { value: bool },
-    // fix: String to u64
     Integer { base: HirNumberBase, value: u64, data_type: Option<HirDataType> },
     Float { value: f64, data_type: Option<HirDataType> },
     Character { value: char },

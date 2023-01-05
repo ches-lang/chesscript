@@ -121,16 +121,19 @@ speculate!{
                 }
 
                 test "can specify integer suffix to integer" {
-                    expect_success("000s32", "Expression::expression", tree!{
+                    expect_success("0s32", "Expression::expression", tree!{
                         SyntaxElementGenerator::expression(
-                            SyntaxElementGenerator::integer_literal("dec", "000", Some("s32")),
+                            SyntaxElementGenerator::integer_literal("dec", "0", Some("s32")),
                         )
                     });
                 }
 
-                // fix: integer literal with float suffix
                 test "can speficy float suffix to integer" {
-                    expect_failure("0f32", "Expression::expression", ParserError::ExpectedEndOfInput);
+                    expect_success("0f32", "Expression::expression", tree!{
+                        SyntaxElementGenerator::expression(
+                            SyntaxElementGenerator::integer_literal("dec", "0", Some("f32")),
+                        )
+                    });
                 }
 
                 test "does not separator number" {
@@ -152,9 +155,9 @@ speculate!{
 
             describe "parse expression > literal > float" {
                 test "has the float number" {
-                    expect_success("000.000", "Expression::expression", tree!{
+                    expect_success("0.0", "Expression::expression", tree!{
                         SyntaxElementGenerator::expression(
-                            SyntaxElementGenerator::float_literal("000", "000", None),
+                            SyntaxElementGenerator::float_literal("0", "0", None),
                         )
                     });
                 }
@@ -168,16 +171,15 @@ speculate!{
                 }
 
                 test "can specify float suffix to float" {
-                    expect_success("000.000f32", "Expression::expression", tree!{
+                    expect_success("0.0f32", "Expression::expression", tree!{
                         SyntaxElementGenerator::expression(
-                            SyntaxElementGenerator::float_literal("000", "000", Some("f32")),
+                            SyntaxElementGenerator::float_literal("0", "0", Some("f32")),
                         )
                     });
                 }
 
-                // fix: allow at syntax definition
                 test "cannot specify integer suffix to float" {
-                    expect_failure("000.000s32", "Expression::expression", ParserError::ExpectedEndOfInput);
+                    expect_failure("0.0s32", "Expression::expression", ParserError::ExpectedEndOfInput);
                 }
             }
 
