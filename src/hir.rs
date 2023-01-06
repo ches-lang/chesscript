@@ -57,7 +57,7 @@ impl<'a> HirGenerator<'a> {
 
     pub fn module(&mut self, node: &SyntaxNode) -> HirGeneratorResult<HirModule> {
         let id_node  = node.search_node("Identifier::identifier").unwrap();
-        let id = self.identifier(id_node, HirIdentifierKind::PascalCase);
+        let id = self.identifier(id_node, Some(HirIdentifierKind::PascalCase));
         let visibility = self.visibility(node.search_node("Item::visibility").unwrap());
         let mut items = Vec::new();
 
@@ -76,7 +76,7 @@ impl<'a> HirGenerator<'a> {
 
     pub fn function(&mut self, node: &SyntaxNode) -> HirGeneratorResult<HirFunction> {
         let id_node  = node.search_node("Identifier::identifier").unwrap();
-        let id = self.identifier(id_node, HirIdentifierKind::SnakeCase);
+        let id = self.identifier(id_node, Some(HirIdentifierKind::SnakeCase));
         let visibility = self.visibility(node.search_node("Item::visibility").unwrap());
         let arg_group = node.search_node("Item::function_argument_group").unwrap();
         let args = arg_group.children.iter().map(|v| self.formal_argument(v.into_node())).collect();
@@ -105,12 +105,12 @@ impl<'a> HirGenerator<'a> {
         Ok(function)
     }
 
-    pub fn formal_argument(&mut self, node: &SyntaxNode) -> HirFunctionFormalArgument {
+    pub fn formal_argument(&mut self, node: &SyntaxNode) -> HirFormalArgument {
         let id_node  = node.search_node("Identifier::identifier").unwrap();
-        let id = self.identifier(id_node, HirIdentifierKind::PascalCase);
+        let id = self.identifier(id_node, Some(HirIdentifierKind::PascalCase));
         let data_type = self.data_type_annotation(node.search_node("DataType::annotation").unwrap());
 
-        HirFunctionFormalArgument {
+        HirFormalArgument {
             id: id,
             data_type: data_type,
         }
@@ -124,7 +124,7 @@ impl<'a> HirGenerator<'a> {
         }
     }
 
-    pub fn identifier(&mut self, node: &SyntaxNode, valid_identifier_kind: HirIdentifierKind) -> String {
+    pub fn identifier(&mut self, node: &SyntaxNode, valid_identifier_kind: Option<HirIdentifierKind>) -> String {
         let child_node = node.child_node_at(0);
 
         let identifier_kind = match child_node.name.as_str() {
@@ -135,9 +135,11 @@ impl<'a> HirGenerator<'a> {
 
         let identifier = &child_node.child_leaf_at(0).value;
 
-        if valid_identifier_kind != identifier_kind {
-            let new_log = CompilerLog::Warning(CompilerWarningLog::IdentifierShouldBePascalCase { id: identifier.to_string() });
-            self.logs.push(new_log);
+        if let Some(valid_identifier_kind) = valid_identifier_kind {
+            if valid_identifier_kind != identifier_kind {
+                let new_log = CompilerLog::Warning(CompilerWarningLog::IdentifierShouldBePascalCase { id: identifier.to_string() });
+                self.logs.push(new_log);
+            }
         }
 
         identifier.to_string()
@@ -149,6 +151,7 @@ impl<'a> HirGenerator<'a> {
         let expression = match child_node.name.as_str() {
             "Literal::literal" => HirExpression::Literal(self.literal(child_node)?),
             "DataType::data_type" => HirExpression::DataType(self.data_type(child_node)),
+            "Function::call" => HirExpression::FunctionCall(self.function_call(child_node)),
             _ => unreachable!(),
         };
 
@@ -304,6 +307,27 @@ impl<'a> HirGenerator<'a> {
 
         Some(character)
     }
+
+    pub fn function_call(&mut self, node: &SyntaxNode) -> HirFunctionCall {
+        let id_node  = node.search_node("Identifier::identifier").unwrap();
+        let id = self.identifier(id_node, None);
+        let arg_group = node.search_node("Function::actual_argument_group").unwrap();
+        let args = arg_group.children.iter().map(|v| self.actual_argument(v.into_node())).collect();
+
+        HirFunctionCall {
+            id: id,
+            args: args,
+        }
+    }
+
+    pub fn actual_argument(&mut self, node: &SyntaxNode) -> HirActualArgument {
+        let expr_node = node.search_node("Expression::expression").unwrap();
+        let expr = self.expression(expr_node);
+
+        HirActualArgument {
+            expr: expr,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -334,13 +358,13 @@ pub struct HirModule {
 pub struct HirFunction {
     pub id: String,
     pub visibility: HirVisibility,
-    pub args: Vec<HirFunctionFormalArgument>,
+    pub args: Vec<HirFormalArgument>,
     pub return_type: Option<HirDataType>,
     pub exprs: Vec<HirExpression>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct HirFunctionFormalArgument {
+pub struct HirFormalArgument {
     pub id: String,
     pub data_type: HirDataType,
 }
@@ -349,6 +373,7 @@ pub struct HirFunctionFormalArgument {
 pub enum HirExpression {
     DataType(HirDataType),
     Literal(HirLiteral),
+    FunctionCall(HirFunctionCall),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -449,4 +474,15 @@ impl From<&str> for HirPrimitiveDataType {
             _ => unreachable!(),
         }
     }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct HirFunctionCall {
+    pub id: String,
+    pub args: Vec<HirActualArgument>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct HirActualArgument {
+    pub expr: Option<HirExpression>,
 }

@@ -112,6 +112,7 @@ impl<'a> JsGenerator<'a> {
 
                 JsStatement::Expression(JsExpression::Literal(js_literal))
             },
+            HirExpression::FunctionCall(call) => unimplemented!(),
         }
     }
 }

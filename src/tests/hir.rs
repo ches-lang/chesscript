@@ -193,11 +193,11 @@ speculate!{
                         id: "main".to_string(),
                         visibility: HirVisibility::Public,
                         args: vec![
-                            HirFunctionFormalArgument {
+                            HirFormalArgument {
                                 id: "arg1".to_string(),
                                 data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
                             },
-                            HirFunctionFormalArgument {
+                            HirFormalArgument {
                                 id: "arg2".to_string(),
                                 data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
                             },
@@ -250,7 +250,7 @@ speculate!{
                                 ),
                             ).into_node(),
                         ),
-                        HirFunctionFormalArgument {
+                        HirFormalArgument {
                             id: "arg".to_string(),
                             data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
                         },
@@ -511,6 +511,82 @@ speculate!{
                             ).into_node(),
                         ),
                         Some(HirExpression::Literal(HirLiteral::String { value: "a\n\0".to_string() })),
+                    );
+                }
+            }
+        }
+
+        describe "hirify expression > function call" {
+            test "has an id and multiple arguments" {
+                let mut generator = HirGenerator::new(&default_hir_options);
+
+                assert_eq!(
+                    generator.expression(
+                        &SyntaxElementGenerator::expression(
+                            SyntaxElementGenerator::function_call(
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "f"),
+                                SyntaxElementGenerator::actual_argument_group(
+                                    vec![
+                                        SyntaxElementGenerator::actual_argument(
+                                            SyntaxElementGenerator::expression(
+                                                SyntaxElementGenerator::boolean_literal("true"),
+                                            ),
+                                        ),
+                                        SyntaxElementGenerator::actual_argument(
+                                            SyntaxElementGenerator::expression(
+                                                SyntaxElementGenerator::boolean_literal("true"),
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                            ),
+                        ).into_node(),
+                    ),
+                    Some(
+                        HirExpression::FunctionCall(
+                            HirFunctionCall {
+                                id: "f".to_string(),
+                                args: vec![
+                                    HirActualArgument {
+                                        expr: Some(
+                                            HirExpression::Literal(
+                                                HirLiteral::Boolean { value: true },
+                                            ),
+                                        ),
+                                    },
+                                    HirActualArgument {
+                                        expr: Some(
+                                            HirExpression::Literal(
+                                                HirLiteral::Boolean { value: true },
+                                            ),
+                                        ),
+                                    },
+                                ],
+                            },
+                        ),
+                    ),
+                );
+            }
+
+            describe "hirify expression > function call > actual argument" {
+                test "has three arguments" {
+                    let mut generator = HirGenerator::new(&default_hir_options);
+
+                    assert_eq!(
+                        generator.actual_argument(
+                            &SyntaxElementGenerator::actual_argument(
+                                SyntaxElementGenerator::expression(
+                                    SyntaxElementGenerator::boolean_literal("true"),
+                                ),
+                            ).into_node(),
+                        ),
+                        HirActualArgument {
+                            expr: Some(
+                                HirExpression::Literal(
+                                    HirLiteral::Boolean { value: true },
+                                ),
+                            ),
+                        },
                     );
                 }
             }

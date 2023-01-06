@@ -76,7 +76,7 @@ speculate!{
                             id: "f".to_string(),
                             visibility: HirVisibility::Private,
                             args: vec![
-                                HirFunctionFormalArgument {
+                                HirFormalArgument {
                                     id: "arg".to_string(),
                                     data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
                                 },
@@ -92,7 +92,6 @@ speculate!{
                 );
             }
         }
-
     }
 
     describe "jsify expression" {
