@@ -112,7 +112,15 @@ impl<'a> JsGenerator<'a> {
 
                 JsStatement::Expression(JsExpression::Literal(js_literal))
             },
-            HirExpression::FunctionCall(call) => unimplemented!(),
+            HirExpression::FunctionCall(call) => JsStatement::Expression(
+                JsExpression::FunctionCall(
+                    JsFunctionCall {
+                        id: call.id.clone(),
+                        // fix: unwrap() of expression
+                        args: call.args.iter().map(|v| self.expression(v.expr.as_ref().unwrap()).into_expression()).collect(),
+                    }
+                ),
+            ),
         }
     }
 }
@@ -200,6 +208,7 @@ pub enum JsExpression {
     Chain(Vec<JsExpression>),
     Identifier(String),
     Literal(JsLiteral),
+    FunctionCall(JsFunctionCall),
 }
 
 impl JsStringifier for JsExpression {
@@ -208,6 +217,7 @@ impl JsStringifier for JsExpression {
             JsExpression::Chain(exprs) => stringify_vec!(exprs, "."),
             JsExpression::Identifier(id) => id.clone(),
             JsExpression::Literal(literal) => literal.stringify(),
+            JsExpression::FunctionCall(call) => call.stringify(),
         }
     }
 }
@@ -257,5 +267,18 @@ impl From<&HirIntegerBase> for JsIntegerBase {
             HirIntegerBase::Decimal => JsIntegerBase::Decimal,
             HirIntegerBase::Hexadecimal => JsIntegerBase::Hexadecimal,
         }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct JsFunctionCall {
+    id: String,
+    args: Vec<JsExpression>,
+}
+
+impl JsStringifier for JsFunctionCall {
+    fn stringify(&self) -> String {
+        let str_args = stringify_vec!(self.args, ",");
+        format!("{}({})", self.id, str_args)
     }
 }

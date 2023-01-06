@@ -167,5 +167,26 @@ speculate!{
 
             // todo: add more tests
         }
+
+        describe "jsify expression > function call" {
+            test "has an id and comma-separated arguments" {
+                let mut generator = JsGenerator::new(default_js_options);
+
+                assert_eq!(
+                    generator.expression(
+                        &HirExpression::FunctionCall(
+                            HirFunctionCall {
+                                id: "f".to_string(),
+                                args: vec![
+                                    HirActualArgument { expr: Some(HirExpression::Literal(HirLiteral::Boolean { value: true })) },
+                                    HirActualArgument { expr: Some(HirExpression::Literal(HirLiteral::Boolean { value: true })) },
+                                ],
+                            },
+                        ),
+                    ).into_expression().stringify(),
+                    "f(true,true)".to_string(),
+                );
+            }
+        }
     }
 }
