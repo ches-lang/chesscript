@@ -13,18 +13,22 @@ speculate!{
                 let mut generator = HirGenerator::new(&default_hir_options);
 
                 assert_eq!(
-                    generator.module(
-                        &SyntaxElementGenerator::module(
-                            "private",
-                            SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
-                            vec![],
+                    generator.item(
+                        &SyntaxElementGenerator::item(
+                            SyntaxElementGenerator::module(
+                                "private",
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
+                                vec![],
+                            ),
                         ).into_node(),
                     ).unwrap(),
-                    HirModule {
-                        id: "Module".to_string(),
-                        visibility: HirVisibility::Private,
-                        items: vec![],
-                    },
+                    HirItem::Module(
+                        HirModule {
+                            id: "Module".to_string(),
+                            visibility: HirVisibility::Private,
+                            items: vec![],
+                        },
+                    ),
                 );
             }
 
@@ -32,18 +36,22 @@ speculate!{
                 let mut generator = HirGenerator::new(&default_hir_options);
 
                 assert_eq!(
-                    generator.module(
-                        &SyntaxElementGenerator::module(
-                            "pub",
-                            SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
-                            vec![],
+                    generator.item(
+                        &SyntaxElementGenerator::item(
+                            SyntaxElementGenerator::module(
+                                "pub",
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
+                                vec![],
+                            ),
                         ).into_node(),
                     ).unwrap(),
-                    HirModule {
-                        id: "Module".to_string(),
-                        visibility: HirVisibility::Public,
-                        items: vec![],
-                    },
+                    HirItem::Module(
+                        HirModule {
+                            id: "Module".to_string(),
+                            visibility: HirVisibility::Public,
+                            items: vec![],
+                        },
+                    ),
                 );
             }
 
@@ -51,32 +59,36 @@ speculate!{
                 let mut generator = HirGenerator::new(&default_hir_options);
 
                 assert_eq!(
-                    generator.module(
-                        &SyntaxElementGenerator::module(
-                            "private",
-                            SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
-                            vec![
-                                SyntaxElementGenerator::item(
-                                    SyntaxElementGenerator::module(
-                                        "private",
-                                        SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "SubModule"),
-                                        vec![],
+                    generator.item(
+                        &SyntaxElementGenerator::item(
+                            SyntaxElementGenerator::module(
+                                "private",
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
+                                vec![
+                                    SyntaxElementGenerator::item(
+                                        SyntaxElementGenerator::module(
+                                            "private",
+                                            SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "SubModule"),
+                                            vec![],
+                                        ),
                                     ),
-                                ),
-                            ],
+                                ],
+                            ),
                         ).into_node(),
                     ).unwrap(),
-                    HirModule {
-                        id: "Module".to_string(),
-                        visibility: HirVisibility::Private,
-                        items: vec![
-                            HirItem::Module(HirModule {
-                                id: "SubModule".to_string(),
-                                visibility: HirVisibility::Private,
-                                items: vec![],
-                            }),
-                        ],
-                    },
+                    HirItem::Module(
+                        HirModule {
+                            id: "Module".to_string(),
+                            visibility: HirVisibility::Private,
+                            items: vec![
+                                HirItem::Module(HirModule {
+                                    id: "SubModule".to_string(),
+                                    visibility: HirVisibility::Private,
+                                    items: vec![],
+                                }),
+                            ],
+                        },
+                    ),
                 );
             }
         }
@@ -86,22 +98,26 @@ speculate!{
                 let mut generator = HirGenerator::new(&default_hir_options);
 
                 assert_eq!(
-                    generator.function(
-                        &SyntaxElementGenerator::function_definition(
-                            SyntaxElementGenerator::visibility("pub"),
-                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                            SyntaxElementGenerator::formal_function_argument_group(vec![]),
-                            None,
-                            vec![],
+                    generator.item(
+                        &SyntaxElementGenerator::item(
+                            SyntaxElementGenerator::function_definition(
+                                SyntaxElementGenerator::visibility("pub"),
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                                SyntaxElementGenerator::formal_function_argument_group(vec![]),
+                                None,
+                                vec![],
+                            ),
                         ).into_node(),
                     ).unwrap(),
-                    HirFunction {
-                        id: "main".to_string(),
-                        visibility: HirVisibility::Public,
-                        args: Vec::new(),
-                        return_type: None,
-                        exprs: Vec::new(),
-                    },
+                    HirItem::Function(
+                        HirFunction {
+                            id: "main".to_string(),
+                            visibility: HirVisibility::Public,
+                            args: Vec::new(),
+                            return_type: None,
+                            exprs: Vec::new(),
+                        },
+                    ),
                 );
             }
 
@@ -109,22 +125,26 @@ speculate!{
                 let mut generator = HirGenerator::new(&default_hir_options);
 
                 assert_eq!(
-                    generator.function(
-                        &SyntaxElementGenerator::function_definition(
-                            SyntaxElementGenerator::visibility("private"),
-                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                            SyntaxElementGenerator::formal_function_argument_group(vec![]),
-                            None,
-                            vec![],
+                    generator.item(
+                        &SyntaxElementGenerator::item(
+                            SyntaxElementGenerator::function_definition(
+                                SyntaxElementGenerator::visibility("private"),
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                                SyntaxElementGenerator::formal_function_argument_group(vec![]),
+                                None,
+                                vec![],
+                            ),
                         ).into_node(),
                     ).unwrap(),
-                    HirFunction {
-                        id: "main".to_string(),
-                        visibility: HirVisibility::Private,
-                        args: Vec::new(),
-                        return_type: None,
-                        exprs: Vec::new(),
-                    },
+                    HirItem::Function(
+                        HirFunction {
+                            id: "main".to_string(),
+                            visibility: HirVisibility::Private,
+                            args: Vec::new(),
+                            return_type: None,
+                            exprs: Vec::new(),
+                        },
+                    ),
                 );
             }
 
@@ -138,22 +158,26 @@ speculate!{
                 );
 
                 assert_eq!(
-                    generator.function(
-                        &SyntaxElementGenerator::function_definition(
-                            SyntaxElementGenerator::visibility("pub"),
-                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                            SyntaxElementGenerator::formal_function_argument_group(vec![]),
-                            Some(return_type_annotation),
-                            vec![],
+                    generator.item(
+                        &SyntaxElementGenerator::item(
+                            SyntaxElementGenerator::function_definition(
+                                SyntaxElementGenerator::visibility("pub"),
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                                SyntaxElementGenerator::formal_function_argument_group(vec![]),
+                                Some(return_type_annotation),
+                                vec![],
+                            ),
                         ).into_node(),
                     ).unwrap(),
-                    HirFunction {
-                        id: "main".to_string(),
-                        visibility: HirVisibility::Public,
-                        args: Vec::new(),
-                        return_type: Some(HirDataType::Primitive(HirPrimitiveDataType::S32)),
-                        exprs: Vec::new(),
-                    },
+                    HirItem::Function(
+                        HirFunction {
+                            id: "main".to_string(),
+                            visibility: HirVisibility::Public,
+                            args: Vec::new(),
+                            return_type: Some(HirDataType::Primitive(HirPrimitiveDataType::S32)),
+                            exprs: Vec::new(),
+                        },
+                    ),
                 );
             }
 
@@ -161,50 +185,54 @@ speculate!{
                 let mut generator = HirGenerator::new(&default_hir_options);
 
                 assert_eq!(
-                    generator.function(
-                        &SyntaxElementGenerator::function_definition(
-                            SyntaxElementGenerator::visibility("pub"),
-                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                            SyntaxElementGenerator::formal_function_argument_group(
-                                vec![
-                                    SyntaxElementGenerator::formal_function_argument(
-                                        SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg1"),
-                                        SyntaxElementGenerator::data_type_annotation(
-                                            SyntaxElementGenerator::data_type(
-                                                SyntaxElementGenerator::primitive_data_type("s32"),
+                    generator.item(
+                        &SyntaxElementGenerator::item(
+                            SyntaxElementGenerator::function_definition(
+                                SyntaxElementGenerator::visibility("pub"),
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                                SyntaxElementGenerator::formal_function_argument_group(
+                                    vec![
+                                        SyntaxElementGenerator::formal_function_argument(
+                                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg1"),
+                                            SyntaxElementGenerator::data_type_annotation(
+                                                SyntaxElementGenerator::data_type(
+                                                    SyntaxElementGenerator::primitive_data_type("s32"),
+                                                ),
                                             ),
                                         ),
-                                    ),
-                                    SyntaxElementGenerator::formal_function_argument(
-                                        SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg2"),
-                                        SyntaxElementGenerator::data_type_annotation(
-                                            SyntaxElementGenerator::data_type(
-                                                SyntaxElementGenerator::primitive_data_type("s32"),
+                                        SyntaxElementGenerator::formal_function_argument(
+                                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "arg2"),
+                                            SyntaxElementGenerator::data_type_annotation(
+                                                SyntaxElementGenerator::data_type(
+                                                    SyntaxElementGenerator::primitive_data_type("s32"),
+                                                ),
                                             ),
                                         ),
-                                    ),
-                                ],
+                                    ],
+                                ),
+                                None,
+                                vec![],
                             ),
-                            None,
-                            vec![],
                         ).into_node(),
                     ).unwrap(),
-                    HirFunction {
-                        id: "main".to_string(),
-                        visibility: HirVisibility::Public,
-                        args: vec![
-                            HirFormalArgument {
-                                id: "arg1".to_string(),
-                                data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
-                            },
-                            HirFormalArgument {
-                                id: "arg2".to_string(),
-                                data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
-                            },
-                        ],
-                        return_type: None,
-                        exprs: Vec::new(),
-                    },
+                    HirItem::Function(
+                        HirFunction {
+                            id: "main".to_string(),
+                            visibility: HirVisibility::Public,
+                            args: vec![
+                                HirFormalArgument {
+                                    id: "arg1".to_string(),
+                                    data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
+                                },
+                                HirFormalArgument {
+                                    id: "arg2".to_string(),
+                                    data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
+                                },
+                            ],
+                            return_type: None,
+                            exprs: Vec::new(),
+                        },
+                    ),
                 );
             }
 
@@ -212,26 +240,30 @@ speculate!{
                 let mut generator = HirGenerator::new(&default_hir_options);
 
                 assert_eq!(
-                    generator.function(
-                        &SyntaxElementGenerator::function_definition(
-                            SyntaxElementGenerator::visibility("pub"),
-                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
-                            SyntaxElementGenerator::formal_function_argument_group(vec![]),
-                            None,
-                            vec![
-                                SyntaxElementGenerator::expression(
-                                    SyntaxElementGenerator::boolean_literal("true"),
-                                ),
-                            ],
+                    generator.item(
+                        &SyntaxElementGenerator::item(
+                            SyntaxElementGenerator::function_definition(
+                                SyntaxElementGenerator::visibility("pub"),
+                                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
+                                SyntaxElementGenerator::formal_function_argument_group(vec![]),
+                                None,
+                                vec![
+                                    SyntaxElementGenerator::expression(
+                                        SyntaxElementGenerator::boolean_literal("true"),
+                                    ),
+                                ],
+                            ),
                         ).into_node(),
                     ).unwrap(),
-                    HirFunction {
-                        id: "main".to_string(),
-                        visibility: HirVisibility::Public,
-                        args: Vec::new(),
-                        return_type: None,
-                        exprs: vec![HirExpression::Literal(HirLiteral::Boolean { value: true })],
-                    },
+                    HirItem::Function(
+                        HirFunction {
+                            id: "main".to_string(),
+                            visibility: HirVisibility::Public,
+                            args: Vec::new(),
+                            return_type: None,
+                            exprs: vec![HirExpression::Literal(HirLiteral::Boolean { value: true })],
+                        },
+                    ),
                 );
             }
 

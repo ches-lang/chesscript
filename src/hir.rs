@@ -49,6 +49,7 @@ impl<'a> HirGenerator<'a> {
 
         let item = match child_node.name.as_str() {
             "Item::module" => HirItem::Module(self.module(child_node)?),
+            "Item::function" => HirItem::Function(self.function(child_node)?),
             _ => unreachable!(),
         };
 
