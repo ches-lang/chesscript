@@ -69,6 +69,12 @@ impl SyntaxElementGenerator {
         }
     }
 
+    pub fn expression_chain(content: Vec<SyntaxChild>) -> SyntaxChild {
+        node!{
+            "Expression::expression" => content
+        }
+    }
+
     pub fn literal(content: SyntaxChild) -> SyntaxChild {
         node!{
             "Literal::literal" => vec![

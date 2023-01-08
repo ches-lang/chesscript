@@ -10,12 +10,6 @@ pub type HirGeneratorResult<T> = Result<T, HirGeneratorError>;
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirGeneratorOptions;
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum HirIdentifierKind {
-    PascalCase,
-    SnakeCase,
-}
-
 pub struct HirGenerator<'a> {
     options: &'a HirGeneratorOptions,
     logs: Vec<CompilerLog>,
@@ -125,6 +119,7 @@ impl<'a> HirGenerator<'a> {
         }
     }
 
+    // fix: validate identifier kind after HIRification
     pub fn identifier(&mut self, node: &SyntaxNode, valid_identifier_kind: Option<HirIdentifierKind>) -> String {
         let child_node = node.child_node_at(0);
 
@@ -146,17 +141,31 @@ impl<'a> HirGenerator<'a> {
         identifier.to_string()
     }
 
-    pub fn expression(&mut self, node: &SyntaxNode) -> Option<HirExpression> {
-        let child_node = node.child_node_at(0);
-
-        let expression = match child_node.name.as_str() {
-            "Literal::literal" => HirExpression::Literal(self.literal(child_node)?),
-            "DataType::data_type" => HirExpression::DataType(self.data_type(child_node)),
-            "Function::call" => HirExpression::FunctionCall(self.function_call(child_node)),
+    pub fn expression_element(&mut self, node: &SyntaxNode) -> Option<HirExpression> {
+        let expr = match node.name.as_str() {
+            "Literal::literal" => HirExpression::Literal(
+                match self.literal(node) {
+                    Some(v) => v,
+                    None => return None,
+                }
+            ),
+            "DataType::data_type" => HirExpression::DataType(self.data_type(node)),
+            "Function::call" => HirExpression::FunctionCall(self.function_call(node)),
+            "Identifier::identifier" => HirExpression::Identifier(self.identifier(node, None)),
             _ => unreachable!(),
         };
 
-        Some(expression)
+        Some(expr)
+    }
+
+    pub fn expression(&mut self, node: &SyntaxNode) -> Option<HirExpression> {
+        if node.children.len() == 1 {
+            let child_node = node.child_node_at(0);
+            self.expression_element(child_node)
+        } else {
+            let exprs: Vec<Option<HirExpression>> = node.children.iter().map(|v| self.expression_element(v.into_node())).collect();
+            Some(HirExpression::Chain(exprs))
+        }
     }
 
     pub fn data_type(&mut self, node: &SyntaxNode) -> HirDataType {
@@ -337,6 +346,18 @@ pub struct Hir {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct HirIdentifier {
+    kind: HirIdentifierKind,
+    id: String,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum HirIdentifierKind {
+    PascalCase,
+    SnakeCase,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum HirVisibility {
     Public,
     Private,
@@ -350,6 +371,7 @@ pub enum HirItem {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirModule {
+    // fix: string to HirIdentifier
     pub id: String,
     pub visibility: HirVisibility,
     pub items: Vec<HirItem>,
@@ -372,10 +394,11 @@ pub struct HirFormalArgument {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirExpression {
-    Chain(Vec<HirExpression>),
+    Chain(Vec<Option<HirExpression>>),
     DataType(HirDataType),
     Literal(HirLiteral),
     FunctionCall(HirFunctionCall),
+    Identifier(String),
 }
 
 #[derive(Clone, Debug, PartialEq)]

@@ -50,19 +50,6 @@ speculate!{
         }
     }
 
-    describe "parse identifir" {
-        test "has the identifier" {
-            expect_success("id", "Identifier::identifier", tree!{
-                SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "id")
-            });
-        }
-
-        test "except reserved keyword from identifier" {
-            // todo: Review
-            expect_failure("s32", "Identifier::identifier", ParserError::UnexpectedEndOfInput);
-        }
-    }
-
     describe "parse item" {
         // fix: not to parse module and function directly, but parse item.
 
@@ -251,6 +238,32 @@ speculate!{
     }
     
     describe "parse expression" {
+        test "has single expression" {
+            expect_success("s32", "Expression::expression", tree!{
+                SyntaxElementGenerator::expression(
+                    SyntaxElementGenerator::data_type(
+                        SyntaxElementGenerator::primitive_data_type("s32"),
+                    ),
+                )
+            });
+        }
+
+        test "is expression chain includes two expressions" {
+            expect_success("s32.f()", "Expression::expression", tree!{
+                SyntaxElementGenerator::expression_chain(
+                    vec![
+                        SyntaxElementGenerator::data_type(
+                            SyntaxElementGenerator::primitive_data_type("s32"),
+                        ),
+                        SyntaxElementGenerator::function_call(
+                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "f"),
+                            SyntaxElementGenerator::actual_argument_group(vec![]),
+                        ),
+                    ],
+                )
+            });
+        }
+
         describe "parse expression > data type" {
             test "has the name of primitive data type" {
                 expect_success("s32", "Expression::expression", tree!{
@@ -504,6 +517,21 @@ speculate!{
                         )
                     });
                 }
+            }
+        }
+
+        describe "parse expression > identifier" {
+            test "has the identifier" {
+                expect_success("id", "Expression::expression", tree!{
+                    SyntaxElementGenerator::expression(
+                        SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "id"),
+                    )
+                });
+            }
+
+            test "except reserved keyword from identifier" {
+                // todo: Review (un)expected EOF.
+                expect_failure("s32", "Identifier::identifier", ParserError::UnexpectedEndOfInput);
             }
         }
     }

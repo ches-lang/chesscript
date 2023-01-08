@@ -91,15 +91,19 @@ impl Module for Item {
 #[derive(RuleContainer)]
 pub struct Expression {
     expression: Element,
+    expression_element: Element,
 }
 
 impl Module for Expression {
     fn new() -> Self {
         add_rules!{
-            expression :=
+            expression := Expression::expression_element().expand() +
+                g!{!str(".") + Expression::expression_element().expand()}.zero_or_more();
+            expression_element :=
                 Literal::literal() |
                 Function::call() |
-                DataType::data_type();
+                DataType::data_type() |
+                Identifier::identifier();
         }
     }
 }
@@ -114,7 +118,10 @@ pub struct Keyword {
 impl Module for Keyword {
     fn new() -> Self {
         add_rules!{
-            keyword := DataType::primitive().expand();
+            // todo: add keywords
+            keyword := DataType::primitive().expand() | str_choices(vec![
+                "end", "false", "fn", "mod", "pub", "true",
+            ]);
         }
     }
 }

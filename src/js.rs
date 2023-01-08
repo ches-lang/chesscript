@@ -120,7 +120,12 @@ impl<'a> JsGenerator<'a> {
             HirExpression::Chain(exprs) => {
                 JsStatement::Expression(
                     JsExpression::Chain(
-                        exprs.iter().map(|v| self.expression(v).into_expression()).collect(),
+                        exprs.iter().map(|v| {
+                            match v {
+                                Some(v) => self.expression(v).into_expression(),
+                                None => unreachable!(),
+                            }
+                        }).collect(),
                     ),
                 )
             },
@@ -148,6 +153,7 @@ impl<'a> JsGenerator<'a> {
                     }
                 ),
             ),
+            _ => unimplemented!(),
         }
     }
 }

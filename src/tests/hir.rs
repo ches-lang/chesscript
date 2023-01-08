@@ -306,6 +306,29 @@ speculate!{
     }
 
     describe "hirify expression" {
+        test "has chained expressions" {
+            let mut generator = HirGenerator::new(&default_hir_options);
+
+            assert_eq!(
+                generator.expression(
+                    &SyntaxElementGenerator::expression_chain(
+                        vec![
+                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "a"),
+                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "b"),
+                        ],
+                    ).into_node(),
+                ),
+                Some(
+                    HirExpression::Chain(
+                        vec![
+                            Some(HirExpression::Identifier("a".to_string())),
+                            Some(HirExpression::Identifier("b".to_string())),
+                        ],
+                    ),
+                ),
+            );
+        }
+
         describe "hirify expression > data type" {
             test "has primitive data type" {
                 let mut generator = HirGenerator::new(&default_hir_options);
@@ -621,6 +644,21 @@ speculate!{
                         },
                     );
                 }
+            }
+        }
+
+        describe "hirify expression > identifier" {
+            test "matches identifier" {
+                let mut generator = HirGenerator::new(&default_hir_options);
+
+                assert_eq!(
+                    generator.expression(
+                        &SyntaxElementGenerator::expression(
+                            SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "id"),
+                        ).into_node(),
+                    ),
+                    Some(HirExpression::Identifier("id".to_string())),
+                );
             }
         }
     }
