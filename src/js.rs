@@ -153,7 +153,7 @@ impl<'a> JsGenerator<'a> {
                     }
                 ),
             ),
-            _ => unimplemented!(),
+            HirExpression::Identifier(id) => JsStatement::Expression(JsExpression::Identifier(id.clone())),
         }
     }
 }

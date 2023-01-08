@@ -126,6 +126,22 @@ speculate!{
     }
 
     describe "jsify expression" {
+        test "has two chained expressions" {
+            let mut generator = JsGenerator::new(default_js_options);
+
+            assert_eq!(
+                generator.expression(
+                    &HirExpression::Chain(
+                        vec![
+                            Some(HirExpression::Identifier("a".to_string())),
+                            Some(HirExpression::Identifier("b".to_string())),
+                        ],
+                    ),
+                ).into_expression().stringify(),
+                "a.b".to_string(),
+            );
+        }
+
         describe "jsify expression > literal" {
             describe "jsify expression > literal > boolean" {
                 test "is true" {
@@ -216,6 +232,19 @@ speculate!{
                         ),
                     ).into_expression().stringify(),
                     "f(true,true)".to_string(),
+                );
+            }
+        }
+
+        describe "jsify expression > identifier" {
+            test "matches identifier" {
+                let mut generator = JsGenerator::new(default_js_options);
+
+                assert_eq!(
+                    generator.expression(
+                        &HirExpression::Identifier("a".to_string())
+                    ).into_expression().stringify(),
+                    "a".to_string(),
                 );
             }
         }
