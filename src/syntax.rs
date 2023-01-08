@@ -63,7 +63,7 @@ impl Module for Item {
         };
 
         add_rules!{
-            item := Item::module();
+            item := Item::module() | Item::function();
             module := g!{Item::visibility() + WHITESPACE(0)}.optional() + !str("mod") + WHITESPACE(1) + Identifier::identifier() + NEWLINES() +
                 g!{g!{Item::item() + NEWLINES()}.zero_or_more()}.name("items") +
                 !str("end");

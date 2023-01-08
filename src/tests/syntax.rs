@@ -64,6 +64,8 @@ speculate!{
     }
 
     describe "parse item" {
+        // fix: not to parse module and function directly, but parse item.
+
         describe "module item" {
             test "has private visibility" {
                 expect_success("mod Module\nend", "Item::module", tree!{
@@ -85,8 +87,8 @@ speculate!{
                 });
             }
 
-            test "has an child item" {
-                expect_success("mod Module\nmod SubModule\nend\nend", "Item::module", tree!{
+            test "has child items" {
+                expect_success("mod Module\nmod SubModule\nend\nfn f()\nend\nend", "Item::module", tree!{
                     SyntaxElementGenerator::module(
                         "private",
                         SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "Module"),
@@ -95,6 +97,15 @@ speculate!{
                                 SyntaxElementGenerator::module(
                                     "private",
                                     SyntaxElementGenerator::identifier(HirIdentifierKind::PascalCase, "SubModule"),
+                                    vec![],
+                                ),
+                            ),
+                            SyntaxElementGenerator::item(
+                                SyntaxElementGenerator::function_definition(
+                                    "private",
+                                    SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "f"),
+                                    SyntaxElementGenerator::formal_function_argument_group(vec![]),
+                                    None,
                                     vec![],
                                 ),
                             ),
@@ -108,7 +119,7 @@ speculate!{
             test "has public visibility" {
                 expect_success("pub fn main()\nend", "Item::function", tree!{
                     SyntaxElementGenerator::function_definition(
-                        SyntaxElementGenerator::visibility("pub"),
+                        "pub",
                         SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
                         SyntaxElementGenerator::formal_function_argument_group(vec![]),
                         None,
@@ -126,7 +137,7 @@ speculate!{
 
                 expect_success("pub fn main(): s32\nend", "Item::function", tree!{
                     SyntaxElementGenerator::function_definition(
-                        SyntaxElementGenerator::visibility("pub"),
+                        "pub",
                         SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
                         SyntaxElementGenerator::formal_function_argument_group(vec![]),
                         Some(return_type_annotation),
@@ -138,7 +149,7 @@ speculate!{
             test "has expression" {
                 expect_success("pub fn main()\ntrue\nend", "Item::function", tree!{
                     SyntaxElementGenerator::function_definition(
-                        SyntaxElementGenerator::visibility("pub"),
+                        "pub",
                         SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
                         SyntaxElementGenerator::formal_function_argument_group(vec![]),
                         None,

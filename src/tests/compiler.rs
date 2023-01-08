@@ -68,4 +68,13 @@ speculate!{
             Vec::new(),
         ));
     }
+
+    test "compile function" {
+        let compiler = CsCompilerGenerator::new("fn main()\nend");
+
+        assert_eq!(compiler.compile(), (
+            "export function main(){}".to_string(),
+            Vec::new(),
+        ));
+    }
 }

@@ -84,7 +84,12 @@ impl<'a> JsGenerator<'a> {
 
     pub fn function(&mut self, function: &'a HirFunction) -> JsStatement {
         let args = function.args.iter().map(|v| v.id.clone()).collect();
-        let mut stmts: Vec<JsStatement> = function.exprs[0..function.exprs.len() - 1].iter().map(|v| self.expression(v)).collect();
+
+        let mut stmts: Vec<JsStatement> = if function.exprs.len() == 0 {
+            Vec::new()
+        } else {
+            function.exprs[0..function.exprs.len() - 1].iter().map(|v| self.expression(v)).collect()
+        };
 
         if let Some(v) = function.exprs.last() {
             let return_expr = self.expression(v).into_expression();
@@ -193,12 +198,12 @@ impl JsStringifier for JsStatement {
                 let str_stmts = stringify_vec!(statements);
                 format!("{}namespace {}{{{}}}", str_es_export, id, str_stmts)
             },
-            JsStatement::Substitution { left, right } => (
+            JsStatement::Substitution { left, right } => {
                 format!("{}={};", left.stringify(), right.stringify())
-            ),
-            JsStatement::ReturnValue { expr } => (
+            },
+            JsStatement::ReturnValue { expr } => {
                 format!("return {};", expr.stringify())
-            ),
+            },
         }
     }
 }

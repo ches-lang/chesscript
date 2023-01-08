@@ -222,7 +222,7 @@ impl SyntaxElementGenerator {
     }
 
     pub fn function_definition(
-        visibility: SyntaxChild,
+        visibility: &str,
         id: SyntaxChild,
         arg_group: SyntaxChild,
         return_type_annotation: Option<SyntaxChild>,
@@ -230,7 +230,7 @@ impl SyntaxElementGenerator {
     ) -> SyntaxChild {
         let function_node = if let Some(return_type_annotation) = return_type_annotation {
             vec![
-                visibility,
+                SyntaxElementGenerator::visibility(visibility),
                 id,
                 arg_group,
                 return_type_annotation,
@@ -240,7 +240,7 @@ impl SyntaxElementGenerator {
             ]
         } else {
             vec![
-                visibility,
+                SyntaxElementGenerator::visibility(visibility),
                 id,
                 arg_group,
                 node!{

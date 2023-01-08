@@ -101,7 +101,7 @@ speculate!{
                     generator.item(
                         &SyntaxElementGenerator::item(
                             SyntaxElementGenerator::function_definition(
-                                SyntaxElementGenerator::visibility("pub"),
+                                "pub",
                                 SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
                                 SyntaxElementGenerator::formal_function_argument_group(vec![]),
                                 None,
@@ -128,7 +128,7 @@ speculate!{
                     generator.item(
                         &SyntaxElementGenerator::item(
                             SyntaxElementGenerator::function_definition(
-                                SyntaxElementGenerator::visibility("private"),
+                                "private",
                                 SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
                                 SyntaxElementGenerator::formal_function_argument_group(vec![]),
                                 None,
@@ -161,7 +161,7 @@ speculate!{
                     generator.item(
                         &SyntaxElementGenerator::item(
                             SyntaxElementGenerator::function_definition(
-                                SyntaxElementGenerator::visibility("pub"),
+                                "pub",
                                 SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
                                 SyntaxElementGenerator::formal_function_argument_group(vec![]),
                                 Some(return_type_annotation),
@@ -188,7 +188,7 @@ speculate!{
                     generator.item(
                         &SyntaxElementGenerator::item(
                             SyntaxElementGenerator::function_definition(
-                                SyntaxElementGenerator::visibility("pub"),
+                                "pub",
                                 SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
                                 SyntaxElementGenerator::formal_function_argument_group(
                                     vec![
@@ -243,7 +243,7 @@ speculate!{
                     generator.item(
                         &SyntaxElementGenerator::item(
                             SyntaxElementGenerator::function_definition(
-                                SyntaxElementGenerator::visibility("pub"),
+                                "pub",
                                 SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "main"),
                                 SyntaxElementGenerator::formal_function_argument_group(vec![]),
                                 None,
