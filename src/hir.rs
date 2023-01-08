@@ -372,6 +372,7 @@ pub struct HirFormalArgument {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirExpression {
+    Chain(Vec<HirExpression>),
     DataType(HirDataType),
     Literal(HirLiteral),
     FunctionCall(HirFunctionCall),

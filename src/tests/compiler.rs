@@ -70,10 +70,15 @@ speculate!{
     }
 
     test "compile function" {
-        let compiler = CsCompilerGenerator::new("fn main()\nend");
+        let compiler = CsCompilerGenerator::new("fn main()\nend")
+            .apply_js_options(JsGeneratorOptions {
+                minify: true,
+                target: JsTarget::Playground,
+                module_style: JsModuleStyle::NoModules,
+            });
 
         assert_eq!(compiler.compile(), (
-            "export function main(){}".to_string(),
+            "function main(){}CSR.main();".to_string(),
             Vec::new(),
         ));
     }

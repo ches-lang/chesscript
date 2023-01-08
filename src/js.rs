@@ -11,12 +11,14 @@ pub struct JsGeneratorOptions {
 #[derive(Clone, Debug, PartialEq)]
 pub enum JsTarget {
     Es2015,
+    Playground,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum JsModuleStyle {
     CommonJs,
     Es2015,
+    NoModules,
 }
 
 pub struct JsGenerator<'a> {
@@ -53,6 +55,19 @@ impl<'a> JsGenerator<'a> {
             };
 
             stmts.push(export_stmt);
+        }
+
+        if self.options.module_style == JsModuleStyle::NoModules {
+            let entry_point_call = JsStatement::Expression(
+                JsExpression::Chain(vec![
+                    JsExpression::Identifier("CSR".to_string()),
+                    JsExpression::FunctionCall(
+                        JsFunctionCall {id: "main".to_string(), args: vec![] },
+                    ),
+                ]),
+            );
+
+            stmts.push(entry_point_call);
         }
 
         Js {
@@ -102,6 +117,13 @@ impl<'a> JsGenerator<'a> {
 
     pub fn expression(&mut self, expr: &'a HirExpression) -> JsStatement {
         match expr {
+            HirExpression::Chain(exprs) => {
+                JsStatement::Expression(
+                    JsExpression::Chain(
+                        exprs.iter().map(|v| self.expression(v).into_expression()).collect(),
+                    ),
+                )
+            },
             HirExpression::DataType(data_type) => match data_type {
                 HirDataType::Primitive(primitive) => JsStatement::Expression(JsExpression::Identifier(primitive.to_string())),
                 HirDataType::Named(id) => JsStatement::Expression(JsExpression::Identifier(id.clone())),

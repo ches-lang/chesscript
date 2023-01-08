@@ -13,7 +13,7 @@ speculate!{
 
     describe "jsify item" {
         describe "jsify item > module" {
-            test "include exports keyword" {
+            test "ES module includes exports keyword" {
                 let mut generator = JsGenerator::new(default_js_options);
 
                 assert_eq!(
@@ -34,7 +34,7 @@ speculate!{
                 );
             }
 
-            test "include substitution of module.exports" {
+            test "CommonJS module includes substitution of module.exports" {
                 let mut generator = JsGenerator::new(
                     &JsGeneratorOptions {
                         minify: true,
@@ -62,6 +62,37 @@ speculate!{
                         },
                     ).stringify(),
                     "namespace Module{namespace SubModule{}}module.exports={Module};".to_string(),
+                );
+            }
+
+            test "includes no exportation keyword" {
+                let mut generator = JsGenerator::new(
+                    &JsGeneratorOptions {
+                        minify: true,
+                        target: JsTarget::Es2015,
+                        module_style: JsModuleStyle::NoModules,
+                    },
+                );
+
+                let module = HirModule {
+                    id: "Module".to_string(),
+                    visibility: HirVisibility::Private,
+                    items: vec![
+                        HirItem::Module(HirModule {
+                            id: "SubModule".to_string(),
+                            visibility: HirVisibility::Private,
+                            items: vec![],
+                        }),
+                    ],
+                };
+
+                assert_eq!(
+                    generator.generate(
+                        &Hir {
+                            items: vec![HirItem::Module(module)],
+                        },
+                    ).stringify(),
+                    "namespace Module{namespace SubModule{}}CSR.main();".to_string(),
                 );
             }
         }
