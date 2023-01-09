@@ -3,8 +3,26 @@ pub mod log;
 use std::result::Result;
 use crate::{syntax::*, js::{JsGenerator, JsGeneratorOptions, JsStringifier}, hir::{HirGenerator, HirGeneratorOptions, Hir, HirGeneratorError}};
 use cake::{Cake, RuleId, Module, parser::ParserError, tree::SyntaxTree};
-
 use self::log::CompilerLog;
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct CsFileHierarchy {
+    pub package_name: String,
+    pub modules: Vec<String>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct CsInputFile {
+    pub hierarchy: CsFileHierarchy,
+    pub src: String,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct CsOutputFile {
+    pub hierarchy: CsFileHierarchy,
+    pub src: String,
+    pub logs: Vec<CompilerLog>,
+}
 
 pub type CsCompilerResult<T> = Result<T, CsCompilerError>;
 
@@ -24,12 +42,12 @@ pub struct CsCompilerOptions<GeneratorOptions> {
 }
 
 pub struct CsCompiler<'a> {
-    input: Box<&'a str>,
+    input: Vec<CsInputFile>,
     options: &'a CsCompilerOptions<JsGeneratorOptions>,
 }
 
 impl<'a> CsCompiler<'a> {
-    pub fn new(input: Box<&'a str>, options: &'a CsCompilerOptions<JsGeneratorOptions>) -> Self {
+    pub fn new(input: Vec<CsInputFile>, options: &'a CsCompilerOptions<JsGeneratorOptions>) -> Self {
         CsCompiler {
             input: input,
             options: options,
@@ -50,17 +68,30 @@ impl<'a> CsCompiler<'a> {
         cake
     }
 
-    pub fn generate_js(&self) -> CsCompilerResult<(String, Vec<CompilerLog>)> {
+    pub fn generate_js(&self) -> CsCompilerResult<Vec<CsOutputFile>> {
         let cake = CsCompiler::bake_cake();
-        let tree = self.parse(&cake)?;
-        let (hir, logs) = self.generate_hir(&tree)?;
-        let mut generator = JsGenerator::new(&self.options.generator_options);
-        let js = generator.generate(&hir).stringify();
-        Ok((js, logs))
+        let mut output = Vec::new();
+
+        for each_input in &self.input {
+            let tree = self.parse(&cake, each_input)?;
+            let (hir, logs) = self.generate_hir(&tree)?;
+            let mut generator = JsGenerator::new(&self.options.generator_options);
+            let js = generator.generate(&hir).stringify();
+
+            let new_output = CsOutputFile {
+                hierarchy:  each_input.hierarchy.clone(),
+                src: js,
+                logs: logs,
+            };
+
+            output.push(new_output);
+        }
+
+        Ok(output)
     }
 
-    pub fn parse(&self, cake: &Cake) -> CsCompilerResult<SyntaxTree> {
-        match cake.parse(*self.input, 128) {
+    pub fn parse(&self, cake: &Cake, input: &CsInputFile) -> CsCompilerResult<SyntaxTree> {
+        match cake.parse(&input.src, 128) {
             Ok(v) => Ok(v),
             Err(e) => return Err(CsCompilerError::ParserError(e)),
         }

@@ -58,12 +58,7 @@ impl<'a> JsGenerator<'a> {
         }
 
         if self.options.module_style == JsModuleStyle::NoModules {
-            let stdlib = "CSR.println=(msg)=>{libcall('log',[msg]);};";
-            let entry_point_call = "CSR.main();";
-
-            stmts.push_front(JsStatement::JsSource(stdlib.to_string()));
-            stmts.push_back(JsStatement::JsSource(entry_point_call.to_string()));
-
+            stmts.push_back(JsStatement::JsSource("CSR.main();".to_string()));
             stmts = vec![JsStatement::NamespaceDefinition { no_modules: true, es_export: false, id: "CSR".to_string(), stmts: stmts.into() }].into();
         }
 
@@ -236,7 +231,7 @@ impl JsStringifier for JsStatement {
                     if let Some(parent_id) = parent_id {
                         format!("{}.{}=({})=>{{{}}};", parent_id, id, str_args, str_stmts)
                     } else {
-                        format!("{}=({})=>{{{}}};", id, str_args, str_stmts)
+                        format!("var {0};{0}=({1})=>{{{2}}};", id, str_args, str_stmts)
                     }
                 } else {
                     let str_es_export = or_value!(*es_export, "export ", "");

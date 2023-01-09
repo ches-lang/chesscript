@@ -1,16 +1,16 @@
-use crate::{compiler::{CsCompiler, CsOptimizationOptions, CsCompilerOptions, log::CompilerLog}, js::{JsModuleStyle, JsTarget, JsGeneratorOptions}};
+use crate::{compiler::{CsCompiler, CsOptimizationOptions, CsCompilerOptions, CsInputFile, CsOutputFile, CsFileHierarchy}, js::{JsModuleStyle, JsTarget, JsGeneratorOptions}};
 use speculate::speculate;
 
-struct CsCompilerGenerator<'a> {
-    input: &'a str,
+struct CsCompilerGenerator {
+    input: Vec<CsInputFile>,
     compiler_options: Option<CsCompilerOptions<JsGeneratorOptions>>,
     js_options: Option<JsGeneratorOptions>,
 }
 
-impl<'a> CsCompilerGenerator<'a> {
-    pub fn new(input: &'a str) -> Self {
+impl CsCompilerGenerator {
+    pub fn new(input_files: Vec<CsInputFile>) -> Self {
         CsCompilerGenerator {
-            input: input,
+            input: input_files,
             compiler_options: None,
             js_options: None,
         }
@@ -26,7 +26,7 @@ impl<'a> CsCompilerGenerator<'a> {
         self
     }
 
-    pub fn compile(self) -> (String, Vec<CompilerLog>) {
+    pub fn compile(self) -> Vec<CsOutputFile> {
         let js_options = self.js_options.unwrap_or(JsGeneratorOptions {
             minify: true,
             target: JsTarget::Es2015,
@@ -40,46 +40,67 @@ impl<'a> CsCompilerGenerator<'a> {
             generator_options: js_options,
         });
 
-        let compiler = CsCompiler::new(Box::new(self.input), &compiler_options);
+        let compiler = CsCompiler::new(self.input, &compiler_options);
         compiler.generate_js().unwrap()
     }
 }
 
 speculate!{
-    test "compile module into ES module" {
-        let compiler = CsCompilerGenerator::new("mod Module\nend");
+    before {
+        let hierarchy = CsFileHierarchy {
+            package_name: "ches_test".to_string(),
+            modules: vec![],
+        };
 
-        assert_eq!(compiler.compile(), (
-            "export namespace Module{}".to_string(),
-            Vec::new(),
-        ));
+        let assert_output = |
+            input: &str,
+            output: &str,
+            callback: fn(generator: CsCompilerGenerator) -> CsCompilerGenerator,
+        | {
+            let mut generator = CsCompilerGenerator::new(
+                vec![
+                    CsInputFile {
+                        hierarchy: hierarchy.clone(),
+                        src: input.to_string(),
+                    },
+                ],
+            );
+
+            generator = callback(generator);
+
+            assert_eq!(generator.compile(), vec![
+                CsOutputFile {
+                    hierarchy: hierarchy.clone(),
+                    src: output.to_string(),
+                    logs: Vec::new(),
+                },
+            ]);
+        };
+    }
+
+    test "compile module into ES module" {
+        assert_output("mod Module\nend", "export namespace Module{}", |v| v);
     }
 
     test "compile module into CommonJS module" {
-        let compiler = CsCompilerGenerator::new("mod Module\nend")
-            .apply_js_options(JsGeneratorOptions {
+        assert_output("mod Module\nend", "namespace Module{}module.exports={Module};", |generator| {
+            generator.apply_js_options(JsGeneratorOptions {
                 minify: true,
                 target: JsTarget::Es2015,
                 module_style: JsModuleStyle::CommonJs,
-            });
-
-        assert_eq!(compiler.compile(), (
-            "namespace Module{}module.exports={Module};".to_string(),
-            Vec::new(),
-        ));
+            })
+        });
     }
 
     test "compile function" {
-        let compiler = CsCompilerGenerator::new("fn main()\nend")
-            .apply_js_options(JsGeneratorOptions {
+        // fix: CSR.main = ...
+
+        assert_output("fn main()\nend", "var CSR;((CSR)=>{var main;main=()=>{};CSR.main();})(CSR||(CSR={}));", |generator| {
+            generator.apply_js_options(JsGeneratorOptions {
                 minify: true,
                 target: JsTarget::Playground,
                 module_style: JsModuleStyle::NoModules,
-            });
-
-        assert_eq!(compiler.compile(), (
-            "function main(){}CSR.main();".to_string(),
-            Vec::new(),
-        ));
+            })
+        });
     }
 }
