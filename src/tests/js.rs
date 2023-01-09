@@ -65,7 +65,7 @@ speculate!{
                 );
             }
 
-            test "includes no exportation keyword" {
+            test "has no-module style namespace" {
                 let mut generator = JsGenerator::new(
                     &JsGeneratorOptions {
                         minify: true,
@@ -86,13 +86,11 @@ speculate!{
                     ],
                 };
 
+                let generate_namespace = |id: &str, stmts: &str| format!("var {0};(({0})=>{{{1}}})({0}||({0}={{}}));", id, stmts);
+
                 assert_eq!(
-                    generator.generate(
-                        &Hir {
-                            items: vec![HirItem::Module(module)],
-                        },
-                    ).stringify(),
-                    "namespace Module{namespace SubModule{}}CSR.main();".to_string(),
+                    generator.module(&module).stringify(),
+                    generate_namespace("Module", &generate_namespace("SubModule", "")).to_string(),
                 );
             }
         }

@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, collections::VecDeque};
 use crate::hir::*;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -37,7 +37,7 @@ impl<'a> JsGenerator<'a> {
     }
 
     pub fn generate(&mut self, hir: &'a Hir) -> Js {
-        let mut stmts: Vec<JsStatement> = hir.items.iter().map(|v| self.item(v)).collect();
+        let mut stmts: VecDeque<JsStatement> = hir.items.iter().map(|v| self.item(v)).collect();
 
         if self.options.module_style == JsModuleStyle::CommonJs {
             let export_ids = self.item_id_pool.iter().map(
@@ -54,20 +54,17 @@ impl<'a> JsGenerator<'a> {
                 right: Box::new(JsExpression::Literal(JsLiteral::Object { exprs: export_ids })),
             };
 
-            stmts.push(export_stmt);
+            stmts.push_back(export_stmt);
         }
 
         if self.options.module_style == JsModuleStyle::NoModules {
-            let entry_point_call = JsStatement::Expression(
-                JsExpression::Chain(vec![
-                    JsExpression::Identifier("CSR".to_string()),
-                    JsExpression::FunctionCall(
-                        JsFunctionCall {id: "main".to_string(), args: vec![] },
-                    ),
-                ]),
-            );
+            let stdlib = "CSR.println=(msg)=>{libcall('log',[msg]);};";
+            let entry_point_call = "CSR.main();";
 
-            stmts.push(entry_point_call);
+            stmts.push_front(JsStatement::JsSource(stdlib.to_string()));
+            stmts.push_back(JsStatement::JsSource(entry_point_call.to_string()));
+
+            stmts = vec![JsStatement::NamespaceDefinition { no_modules: true, es_export: false, id: "CSR".to_string(), stmts: stmts.into() }].into();
         }
 
         Js {
@@ -77,6 +74,10 @@ impl<'a> JsGenerator<'a> {
 
     pub fn is_es_module(&self) -> bool {
         self.options.module_style == JsModuleStyle::Es2015
+    }
+
+    pub fn is_no_modules(&self) -> bool {
+        self.options.module_style == JsModuleStyle::NoModules
     }
 
     pub fn item(&mut self, item: &'a HirItem) -> JsStatement {
@@ -94,7 +95,7 @@ impl<'a> JsGenerator<'a> {
         }
 
         let stmts = module.items.iter().map(|v| self.item(v)).collect();
-        JsStatement::NamespaceDefinition { es_export: self.is_es_module(), id: module.id.clone(), stmts }
+        JsStatement::NamespaceDefinition { no_modules: self.is_no_modules(), es_export: self.is_es_module(), id: module.id.clone(), stmts }
     }
 
     pub fn function(&mut self, function: &'a HirFunction) -> JsStatement {
@@ -112,7 +113,17 @@ impl<'a> JsGenerator<'a> {
             stmts.push(last_stmt);
         }
 
-        JsStatement::FunctionDefinition { es_export: self.is_es_module(), id: function.id.clone(), args: args, stmts: stmts }
+        JsStatement::FunctionDefinition {
+            no_modules: self.is_no_modules(),
+            es_export: self.is_es_module(),
+            parent_id: match self.module_stack.last() {
+                Some(v) => Some(v.id.clone()),
+                None => None,
+            },
+            id: function.id.clone(),
+            args: args,
+            stmts: stmts,
+        }
     }
 
     pub fn expression(&mut self, expr: &'a HirExpression) -> JsStatement {
@@ -184,7 +195,7 @@ macro_rules! stringify_vec {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Js {
-    stmts: Vec<JsStatement>,
+    stmts: VecDeque<JsStatement>,
 }
 
 impl JsStringifier for Js {
@@ -195,9 +206,10 @@ impl JsStringifier for Js {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum JsStatement {
+    JsSource(String),
     Expression(JsExpression),
-    FunctionDefinition { es_export: bool, id: String, args: Vec<String>, stmts: Vec<JsStatement> },
-    NamespaceDefinition { es_export: bool, id: String, stmts: Vec<JsStatement> },
+    FunctionDefinition { no_modules: bool, es_export: bool, parent_id: Option<String>, id: String, args: Vec<String>, stmts: Vec<JsStatement> },
+    NamespaceDefinition { no_modules: bool, es_export: bool, id: String, stmts: Vec<JsStatement> },
     Substitution { left: Box<JsExpression>, right: Box<JsExpression> },
     ReturnValue { expr: JsExpression },
 }
@@ -214,17 +226,32 @@ impl JsStatement {
 impl JsStringifier for JsStatement {
     fn stringify(&self) -> String {
         match self {
+            JsStatement::JsSource(src) => src.clone(),
             JsStatement::Expression(expr) => format!("{};", expr.stringify()),
-            JsStatement::FunctionDefinition { es_export, id, args, stmts } => {
-                let str_es_export = or_value!(*es_export, "export ", "");
+            JsStatement::FunctionDefinition { no_modules, es_export, parent_id, id, args, stmts } => {
                 let str_stmts = stringify_vec!(stmts);
-                let args = args.join(",");
-                format!("{}function {}({}){{{}}}", str_es_export, id, args, str_stmts)
+                let str_args = args.join(",");
+
+                if *no_modules {
+                    if let Some(parent_id) = parent_id {
+                        format!("{}.{}=({})=>{{{}}};", parent_id, id, str_args, str_stmts)
+                    } else {
+                        format!("{}=({})=>{{{}}};", id, str_args, str_stmts)
+                    }
+                } else {
+                    let str_es_export = or_value!(*es_export, "export ", "");
+                    format!("{}function {}({}){{{}}}", str_es_export, id, str_args, str_stmts)
+                }
             },
-            JsStatement::NamespaceDefinition { es_export, id, stmts: statements } => {
-                let str_es_export = or_value!(*es_export, "export ", "");
+            JsStatement::NamespaceDefinition { no_modules, es_export, id, stmts: statements } => {
                 let str_stmts = stringify_vec!(statements);
-                format!("{}namespace {}{{{}}}", str_es_export, id, str_stmts)
+
+                if *no_modules {
+                    format!("var {0};(({0})=>{{{1}}})({0}||({0}={{}}));", id, str_stmts)
+                } else {
+                    let str_es_export = or_value!(*es_export, "export ", "");
+                    format!("{}namespace {}{{{}}}", str_es_export, id, str_stmts)
+                }
             },
             JsStatement::Substitution { left, right } => {
                 format!("{}={};", left.stringify(), right.stringify())
