@@ -1,3 +1,5 @@
+pub mod resolver;
+
 use std::{result::Result, fmt::{Display, Formatter}, num::IntErrorKind};
 use cake::tree::*;
 use crate::{compiler::log::{CompilerLog, CompilerWarningLog, CompilerErrorLog}};
