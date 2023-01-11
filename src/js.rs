@@ -86,15 +86,15 @@ impl<'a> JsGenerator<'a> {
         self.module_stack.push(module);
 
         if self.module_stack.len() == 1 {
-            self.item_id_pool.push(module.id.clone());
+            self.item_id_pool.push(module.id.id.clone());
         }
 
         let stmts = module.items.iter().map(|v| self.item(v)).collect();
-        JsStatement::NamespaceDefinition { no_modules: self.is_no_modules(), es_export: self.is_es_module(), id: module.id.clone(), stmts }
+        JsStatement::NamespaceDefinition { no_modules: self.is_no_modules(), es_export: self.is_es_module(), id: module.id.id.clone(), stmts }
     }
 
     pub fn function(&mut self, function: &'a HirFunction) -> JsStatement {
-        let args = function.args.iter().map(|v| v.id.clone()).collect();
+        let args = function.args.iter().map(|v| v.id.id.clone()).collect();
 
         let mut stmts: Vec<JsStatement> = if function.exprs.len() == 0 {
             Vec::new()
@@ -112,10 +112,10 @@ impl<'a> JsGenerator<'a> {
             no_modules: self.is_no_modules(),
             es_export: self.is_es_module(),
             parent_id: match self.module_stack.last() {
-                Some(v) => Some(v.id.clone()),
+                Some(v) => Some(v.id.id.clone()),
                 None => None,
             },
-            id: function.id.clone(),
+            id: function.id.id.clone(),
             args: args,
             stmts: stmts,
         }
@@ -153,13 +153,13 @@ impl<'a> JsGenerator<'a> {
             HirExpression::FunctionCall(call) => JsStatement::Expression(
                 JsExpression::FunctionCall(
                     JsFunctionCall {
-                        id: call.id.clone(),
+                        id: call.id.id.clone(),
                         // fix: unwrap() of expression
                         args: call.args.iter().map(|v| self.expression(v.expr.as_ref().unwrap()).into_expression()).collect(),
                     }
                 ),
             ),
-            HirExpression::Identifier(id) => JsStatement::Expression(JsExpression::Identifier(id.clone())),
+            HirExpression::Identifier(id) => JsStatement::Expression(JsExpression::Identifier(id.id.clone())),
         }
     }
 }

@@ -84,7 +84,7 @@ impl IdentifierCollector {
     pub(crate) fn item(&mut self, parent: &mut CollectedBlock, item: &HirItem) {
         match item {
             HirItem::Module(module) => {
-                let id = CollectedIdentifier::new(IdentifierKind::Module, &module.id);
+                let id = CollectedIdentifier::new(IdentifierKind::Module, &module.id.id);
                 let mut new_block = CollectedBlock::new(id);
 
                 for each_item in &module.items {
@@ -94,11 +94,11 @@ impl IdentifierCollector {
                 parent.add_child(new_block.into());
             },
             HirItem::Function(function) => {
-                let id = CollectedIdentifier::new(IdentifierKind::Function, &function.id);
+                let id = CollectedIdentifier::new(IdentifierKind::Function, &function.id.id);
                 let mut new_block = CollectedBlock::new(id);
 
                 for each_arg in &function.args {
-                    let new_id = CollectedIdentifier::new(IdentifierKind::Variable, &each_arg.id);
+                    let new_id = CollectedIdentifier::new(IdentifierKind::Variable, &each_arg.id.id);
                     new_block.add_child(new_id.into());
                 }
 
@@ -121,6 +121,55 @@ impl IdentifierCollector {
                 }
             },
             _ => (),
+        }
+    }
+}
+
+pub struct IdentifierResolver<'a> {
+    ids: &'a Vec<CollectedIdentifier>,
+}
+
+impl<'a> IdentifierResolver<'a> {
+    pub fn new(ids: &'a Vec<CollectedIdentifier>) -> Self {
+        IdentifierResolver {
+            ids: ids,
+        }
+    }
+
+    pub fn resolve(&mut self, hir: &mut Hir) {
+        for each_item in &mut hir.items {
+            self.item(each_item);
+        }
+    }
+
+    pub fn item(&mut self, item: &mut HirItem) {
+        match item {
+            HirItem::Module(module) => {
+                for each_item in &mut module.items {
+                    self.item(each_item);
+                }
+            },
+            HirItem::Function(function) => {
+                for each_expr in &mut function.exprs {
+                    self.expr(each_expr);
+                }
+            },
+        }
+    }
+
+    pub fn expr(&mut self, expr: &mut HirExpression) {
+        match expr {
+            HirExpression::Chain(exprs) => {
+                for each_expr in exprs {
+                    if let Some(each_expr) = each_expr {
+                        self.expr(each_expr);
+                    }
+                }
+            },
+            HirExpression::DataType(data_type) => (),
+            HirExpression::Literal(literal) => (),
+            HirExpression::FunctionCall(call) => (),
+            HirExpression::Identifier(id) => (),
         }
     }
 }

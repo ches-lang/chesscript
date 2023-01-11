@@ -24,7 +24,7 @@ speculate!{
                     ).unwrap(),
                     HirItem::Module(
                         HirModule {
-                            id: "Module".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::PascalCase, "Module"),
                             visibility: HirVisibility::Private,
                             items: vec![],
                         },
@@ -47,7 +47,7 @@ speculate!{
                     ).unwrap(),
                     HirItem::Module(
                         HirModule {
-                            id: "Module".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::PascalCase, "Module"),
                             visibility: HirVisibility::Public,
                             items: vec![],
                         },
@@ -78,11 +78,11 @@ speculate!{
                     ).unwrap(),
                     HirItem::Module(
                         HirModule {
-                            id: "Module".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::PascalCase, "Module"),
                             visibility: HirVisibility::Private,
                             items: vec![
                                 HirItem::Module(HirModule {
-                                    id: "SubModule".to_string(),
+                                    id: HirIdentifier::unresolved_from(HirIdentifierKind::PascalCase, "SubModule"),
                                     visibility: HirVisibility::Private,
                                     items: vec![],
                                 }),
@@ -111,7 +111,7 @@ speculate!{
                     ).unwrap(),
                     HirItem::Function(
                         HirFunction {
-                            id: "main".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "main"),
                             visibility: HirVisibility::Public,
                             args: Vec::new(),
                             return_type: None,
@@ -138,7 +138,7 @@ speculate!{
                     ).unwrap(),
                     HirItem::Function(
                         HirFunction {
-                            id: "main".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "main"),
                             visibility: HirVisibility::Private,
                             args: Vec::new(),
                             return_type: None,
@@ -171,7 +171,7 @@ speculate!{
                     ).unwrap(),
                     HirItem::Function(
                         HirFunction {
-                            id: "main".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "main"),
                             visibility: HirVisibility::Public,
                             args: Vec::new(),
                             return_type: Some(HirDataType::Primitive(HirPrimitiveDataType::S32)),
@@ -217,15 +217,15 @@ speculate!{
                     ).unwrap(),
                     HirItem::Function(
                         HirFunction {
-                            id: "main".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "main"),
                             visibility: HirVisibility::Public,
                             args: vec![
                                 HirFormalArgument {
-                                    id: "arg1".to_string(),
+                                    id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "arg1"),
                                     data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
                                 },
                                 HirFormalArgument {
-                                    id: "arg2".to_string(),
+                                    id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "arg2"),
                                     data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
                                 },
                             ],
@@ -257,7 +257,7 @@ speculate!{
                     ).unwrap(),
                     HirItem::Function(
                         HirFunction {
-                            id: "main".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "main"),
                             visibility: HirVisibility::Public,
                             args: Vec::new(),
                             return_type: None,
@@ -283,7 +283,7 @@ speculate!{
                             ).into_node(),
                         ),
                         HirFormalArgument {
-                            id: "arg".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "arg"),
                             data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
                         },
                     );
@@ -321,8 +321,8 @@ speculate!{
                 Some(
                     HirExpression::Chain(
                         vec![
-                            Some(HirExpression::Identifier("a".to_string())),
-                            Some(HirExpression::Identifier("b".to_string())),
+                            Some(HirExpression::Identifier(HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "a"))),
+                            Some(HirExpression::Identifier(HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "b"))),
                         ],
                     ),
                 ),
@@ -600,7 +600,7 @@ speculate!{
                     Some(
                         HirExpression::FunctionCall(
                             HirFunctionCall {
-                                id: "f".to_string(),
+                                id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "f"),
                                 args: vec![
                                     HirActualArgument {
                                         expr: Some(
@@ -657,7 +657,7 @@ speculate!{
                             SyntaxElementGenerator::identifier(HirIdentifierKind::SnakeCase, "id"),
                         ).into_node(),
                     ),
-                    Some(HirExpression::Identifier("id".to_string())),
+                    Some(HirExpression::Identifier(HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "id"))),
                 );
             }
         }

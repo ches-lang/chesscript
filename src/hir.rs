@@ -122,25 +122,25 @@ impl<'a> HirGenerator<'a> {
     }
 
     // fix: validate identifier kind after HIRification
-    pub fn identifier(&mut self, node: &SyntaxNode, valid_identifier_kind: Option<HirIdentifierKind>) -> String {
+    pub fn identifier(&mut self, node: &SyntaxNode, valid_kind: Option<HirIdentifierKind>) -> HirIdentifier {
         let child_node = node.child_node_at(0);
 
-        let identifier_kind = match child_node.name.as_str() {
+        let kind = match child_node.name.as_str() {
             "Identifier::pascal_case" => HirIdentifierKind::PascalCase,
             "Identifier::snake_case" => HirIdentifierKind::SnakeCase,
             _ => unreachable!(),
         };
 
-        let identifier = &child_node.child_leaf_at(0).value;
+        let id = &child_node.child_leaf_at(0).value;
 
-        if let Some(valid_identifier_kind) = valid_identifier_kind {
-            if valid_identifier_kind != identifier_kind {
-                let new_log = CompilerLog::Warning(CompilerWarningLog::IdentifierShouldBePascalCase { id: identifier.to_string() });
+        if let Some(valid_kind) = valid_kind {
+            if valid_kind != kind {
+                let new_log = CompilerLog::Warning(CompilerWarningLog::IdentifierShouldBePascalCase { id: id.to_string() });
                 self.logs.push(new_log);
             }
         }
 
-        identifier.to_string()
+        HirIdentifier::unresolved_from(kind, id)
     }
 
     pub fn expression_element(&mut self, node: &SyntaxNode) -> Option<HirExpression> {
@@ -348,15 +348,48 @@ pub struct Hir {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct HirIdentifier {
-    kind: HirIdentifierKind,
-    id: String,
+pub struct HirIdentifierResolutionIndex(u32);
+
+impl Default for HirIdentifierResolutionIndex {
+    fn default() -> Self {
+        HirIdentifierResolutionIndex(0)
+    }
 }
 
+// fix: rename to HirIdentifierCase
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirIdentifierKind {
     PascalCase,
     SnakeCase,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct HirIdentifier {
+    pub kind: HirIdentifierKind,
+    pub id: String,
+    pub index: HirIdentifierResolutionIndex,
+}
+
+impl HirIdentifier {
+    pub fn resolved_from(kind: HirIdentifierKind, id: &str, index: u32) -> Self {
+        HirIdentifier {
+            kind: kind,
+            id: id.to_string(),
+            index: HirIdentifierResolutionIndex(index),
+        }
+    }
+
+    pub fn unresolved_from(kind: HirIdentifierKind, id: &str) -> Self {
+        HirIdentifier {
+            kind: kind,
+            id: id.to_string(),
+            index: HirIdentifierResolutionIndex::default(),
+        }
+    }
+
+    pub fn resolve(&mut self, index: u32) {
+        self.index = HirIdentifierResolutionIndex(index);
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -373,15 +406,14 @@ pub enum HirItem {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirModule {
-    // fix: string to HirIdentifier
-    pub id: String,
+    pub id: HirIdentifier,
     pub visibility: HirVisibility,
     pub items: Vec<HirItem>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirFunction {
-    pub id: String,
+    pub id: HirIdentifier,
     pub visibility: HirVisibility,
     pub args: Vec<HirFormalArgument>,
     pub return_type: Option<HirDataType>,
@@ -390,7 +422,7 @@ pub struct HirFunction {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirFormalArgument {
-    pub id: String,
+    pub id: HirIdentifier,
     pub data_type: HirDataType,
 }
 
@@ -400,7 +432,7 @@ pub enum HirExpression {
     DataType(HirDataType),
     Literal(HirLiteral),
     FunctionCall(HirFunctionCall),
-    Identifier(String),
+    Identifier(HirIdentifier),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -505,7 +537,7 @@ impl From<&str> for HirPrimitiveDataType {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirFunctionCall {
-    pub id: String,
+    pub id: HirIdentifier,
     pub args: Vec<HirActualArgument>,
 }
 

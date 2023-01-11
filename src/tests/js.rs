@@ -19,11 +19,11 @@ speculate!{
                 assert_eq!(
                     generator.module(
                         &HirModule {
-                            id: "Module".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::PascalCase, "Module"),
                             visibility: HirVisibility::Private,
                             items: vec![
                                 HirItem::Module(HirModule {
-                                    id: "SubModule".to_string(),
+                                    id: HirIdentifier::unresolved_from(HirIdentifierKind::PascalCase, "SubModule"),
                                     visibility: HirVisibility::Private,
                                     items: vec![],
                                 }),
@@ -44,11 +44,11 @@ speculate!{
                 );
 
                 let module = HirModule {
-                    id: "Module".to_string(),
+                    id: HirIdentifier::unresolved_from(HirIdentifierKind::PascalCase, "Module"),
                     visibility: HirVisibility::Private,
                     items: vec![
                         HirItem::Module(HirModule {
-                            id: "SubModule".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::PascalCase, "SubModule"),
                             visibility: HirVisibility::Private,
                             items: vec![],
                         }),
@@ -75,11 +75,11 @@ speculate!{
                 );
 
                 let module = HirModule {
-                    id: "Module".to_string(),
+                    id: HirIdentifier::unresolved_from(HirIdentifierKind::PascalCase, "Module"),
                     visibility: HirVisibility::Private,
                     items: vec![
                         HirItem::Module(HirModule {
-                            id: "SubModule".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::PascalCase, "SubModule"),
                             visibility: HirVisibility::Private,
                             items: vec![],
                         }),
@@ -102,11 +102,11 @@ speculate!{
                 assert_eq!(
                     generator.function(
                         &HirFunction {
-                            id: "f".to_string(),
+                            id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "f"),
                             visibility: HirVisibility::Private,
                             args: vec![
                                 HirFormalArgument {
-                                    id: "arg".to_string(),
+                                    id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "arg"),
                                     data_type: HirDataType::Primitive(HirPrimitiveDataType::S32),
                                 },
                             ],
@@ -131,8 +131,8 @@ speculate!{
                 generator.expression(
                     &HirExpression::Chain(
                         vec![
-                            Some(HirExpression::Identifier("a".to_string())),
-                            Some(HirExpression::Identifier("b".to_string())),
+                            Some(HirExpression::Identifier(HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "a"))),
+                            Some(HirExpression::Identifier(HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "b"))),
                         ],
                     ),
                 ).into_expression().stringify(),
@@ -221,7 +221,7 @@ speculate!{
                     generator.expression(
                         &HirExpression::FunctionCall(
                             HirFunctionCall {
-                                id: "f".to_string(),
+                                id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "f"),
                                 args: vec![
                                     HirActualArgument { expr: Some(HirExpression::Literal(HirLiteral::Boolean { value: true })) },
                                     HirActualArgument { expr: Some(HirExpression::Literal(HirLiteral::Boolean { value: true })) },
@@ -240,7 +240,7 @@ speculate!{
 
                 assert_eq!(
                     generator.expression(
-                        &HirExpression::Identifier("a".to_string())
+                        &HirExpression::Identifier(HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "a"))
                     ).into_expression().stringify(),
                     "a".to_string(),
                 );

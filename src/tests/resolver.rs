@@ -28,12 +28,12 @@ speculate!{
                             items: vec![
                                 HirItem::Module(
                                     HirModule {
-                                        id: "Module".to_string(),
+                                        id: HirIdentifier::unresolved_from(HirIdentifierKind::PascalCase, "Module"),
                                         visibility: HirVisibility::Private,
                                         items: vec![
                                             HirItem::Module(
                                                 HirModule {
-                                                    id: "SubModule".to_string(),
+                                                    id: HirIdentifier::unresolved_from(HirIdentifierKind::PascalCase, "SubModule"),
                                                     visibility: HirVisibility::Private,
                                                     items: vec![],
                                                 },
@@ -71,11 +71,11 @@ speculate!{
                             items: vec![
                                 HirItem::Function(
                                     HirFunction {
-                                        id: "f".to_string(),
+                                        id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "f"),
                                         visibility: HirVisibility::Private,
                                         args: vec![
                                             HirFormalArgument {
-                                                id: "arg".to_string(),
+                                                id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "arg"),
                                                 data_type: HirDataType::Primitive(
                                                     HirPrimitiveDataType::S32,
                                                 ),
