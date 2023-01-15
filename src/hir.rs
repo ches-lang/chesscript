@@ -4,6 +4,8 @@ use std::{result::Result, fmt::{Display, Formatter}, num::IntErrorKind};
 use cake::tree::*;
 use crate::{compiler::log::{CompilerLog, CompilerWarningLog, CompilerErrorLog}};
 
+use self::resolver::IdentifierIndex;
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirGeneratorError {}
 
@@ -347,15 +349,6 @@ pub struct Hir {
     pub items: Vec<HirItem>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct HirIdentifierResolutionIndex(u32);
-
-impl Default for HirIdentifierResolutionIndex {
-    fn default() -> Self {
-        HirIdentifierResolutionIndex(0)
-    }
-}
-
 // fix: rename to HirIdentifierCase
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirIdentifierKind {
@@ -367,15 +360,15 @@ pub enum HirIdentifierKind {
 pub struct HirIdentifier {
     pub kind: HirIdentifierKind,
     pub id: String,
-    pub index: HirIdentifierResolutionIndex,
+    pub index: IdentifierIndex,
 }
 
 impl HirIdentifier {
-    pub fn resolved_from(kind: HirIdentifierKind, id: &str, index: u32) -> Self {
+    pub fn resolved_from(kind: HirIdentifierKind, id: &str, index: IdentifierIndex) -> Self {
         HirIdentifier {
             kind: kind,
             id: id.to_string(),
-            index: HirIdentifierResolutionIndex(index),
+            index: index,
         }
     }
 
@@ -383,12 +376,12 @@ impl HirIdentifier {
         HirIdentifier {
             kind: kind,
             id: id.to_string(),
-            index: HirIdentifierResolutionIndex::default(),
+            index: 0,
         }
     }
 
-    pub fn resolve(&mut self, index: u32) {
-        self.index = HirIdentifierResolutionIndex(index);
+    pub fn resolve(&mut self, index: IdentifierIndex) {
+        self.index = index;
     }
 }
 
