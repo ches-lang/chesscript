@@ -185,7 +185,7 @@ impl IdentifierCollector {
 
                 for each_arg in &mut function.args {
                     let new_id = self.generate_identifier(IdentifierKind::Variable, &each_arg.id.id);
-                    self.add_nest_child(&mut each_arg.id, parent, new_id.into());
+                    self.add_nest_child(&mut each_arg.id, &mut new_nest, new_id.into());
                 }
 
                 for each_expr in &mut function.exprs {

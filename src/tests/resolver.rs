@@ -50,8 +50,8 @@ speculate!{
         };
     }
 
-    // describe "collection" {
-        // describe "collection > item" {
+    describe "collection" {
+        describe "collection > item" {
             describe "collection > item > module" {
                 test "matches identifiers and subitem" {
                     assert_ids(
@@ -98,53 +98,66 @@ speculate!{
                                 parent: Some(1),
                                 id: "Module".to_string(),
                             },
-                        ].into()
+                        ].into(),
                     );
                 }
             }
 
-    //         describe "collection > item > function" {
-    //             test "matches identifiers, arguments and expression" {
-    //                 assert_ids(
-    //                     Hir {
-    //                         items: vec![
-    //                             HirItem::Function(
-    //                                 HirFunction {
-    //                                     id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "f"),
-    //                                     visibility: HirVisibility::Private,
-    //                                     args: vec![
-    //                                         HirFormalArgument {
-    //                                             id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "arg"),
-    //                                             data_type: HirDataType::Primitive(
-    //                                                 HirPrimitiveDataType::S32,
-    //                                             ),
-    //                                         },
-    //                                     ],
-    //                                     return_type: None,
-    //                                     exprs: vec![
-    //                                         // fix: add expression
-    //                                     ],
-    //                                 },
-    //                             ),
-    //                         ],
-    //                     },
-    //                     vec![
-    //                         CollectedNest {
-    //                             id: CollectedIdentifier {
-    //                                 kind: IdentifierKind::Function,
-    //                                 id: "f".to_string(),
-    //                             },
-    //                             children: vec![
-    //                                 CollectedIdentifier {
-    //                                     kind: IdentifierKind::Variable,
-    //                                     id: "arg".to_string(),
-    //                                 }.into(),
-    //                             ],
-    //                         }.into(),
-    //                     ],
-    //                 );
-    //             }
-    //         }
-    //     }
-    // }
+            describe "collection > item > function" {
+                test "matches identifiers, arguments and expression" {
+                    assert_ids(
+                        Hir {
+                            items: vec![
+                                HirItem::Function(
+                                    HirFunction {
+                                        id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "f"),
+                                        visibility: HirVisibility::Private,
+                                        args: vec![
+                                            HirFormalArgument {
+                                                id: HirIdentifier::unresolved_from(HirIdentifierKind::SnakeCase, "arg"),
+                                                data_type: HirDataType::Primitive(
+                                                    HirPrimitiveDataType::S32,
+                                                ),
+                                            },
+                                        ],
+                                        return_type: None,
+                                        exprs: vec![
+                                            // fix: add expression
+                                        ],
+                                    },
+                                ),
+                            ],
+                        },
+                        vec![
+                            Nest {
+                                id: generate_named_id(2, IdentifierKind::Function, 1, "f"),
+                                children: vec![
+                                    IdentifierDefinition {
+                                        index: 3,
+                                        kind: IdentifierKind::Variable,
+                                        parent: Some(2),
+                                        id: "arg".to_string(),
+                                    }.into(),
+                                ],
+                            }.into(),
+                        ],
+                        vec![
+                            IdentifierDefinition {
+                                index: 3,
+                                kind: IdentifierKind::Variable,
+                                parent: Some(2),
+                                id: "arg".to_string(),
+                            },
+                            IdentifierDefinition {
+                                index: 2,
+                                kind: IdentifierKind::Function,
+                                parent: Some(1),
+                                id: "f".to_string(),
+                            },
+                        ].into(),
+                    );
+                }
+            }
+        }
+    }
 }
